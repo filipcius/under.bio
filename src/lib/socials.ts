@@ -106,11 +106,11 @@ export const BADGE_PRESETS = [
   { id: "certificate", label: "Craft" },
 ] as const;
 
-/** Site admins (dashboard /admin). Keep tight. */
-export const OWNER_DISCORD_IDS = new Set(["1494801028619571221"]);
-
-/** Public “OWNER” badge on profiles (can include co-owners without admin). */
-export const OWNER_BADGE_DISCORD_IDS = new Set([
-  ...OWNER_DISCORD_IDS,
+/** Site admins (dashboard /admin) + Owner badge. */
+export const OWNER_DISCORD_IDS = new Set([
+  "1494801028619571221",
   "908381661224378418",
 ]);
+
+/** Public “OWNER” badge on profiles (defaults to all admins). */
+export const OWNER_BADGE_DISCORD_IDS = new Set([...OWNER_DISCORD_IDS]);
