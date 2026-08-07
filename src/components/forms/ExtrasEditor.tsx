@@ -22,11 +22,31 @@ const MODULES: {
   title: string;
   description: string;
 }[] = [
-  { id: "links", title: "Links", description: "Manage your social links." },
-  { id: "badges", title: "Badges", description: "Badges shown on your page." },
-  { id: "tags", title: "Tags", description: "Your personal tags." },
-  { id: "discord", title: "Discord", description: "Live Discord server cards." },
-  { id: "tracks", title: "Tracks", description: "Music and cover art." },
+  {
+    id: "links",
+    title: "Links",
+    description: "Create and manage your social links.",
+  },
+  {
+    id: "badges",
+    title: "Badges",
+    description: "Browse badges shown on your page.",
+  },
+  {
+    id: "tags",
+    title: "Tags",
+    description: "Create and manage your personal tags.",
+  },
+  {
+    id: "discord",
+    title: "Discord",
+    description: "Live Discord server cards on your page.",
+  },
+  {
+    id: "tracks",
+    title: "Tracks",
+    description: "Upload music and cover art for the player.",
+  },
 ];
 
 function ModulePanel({
@@ -45,19 +65,19 @@ function ModulePanel({
   children: React.ReactNode;
 }) {
   return (
-    <section id={id} className="min-w-0 scroll-mt-24 overflow-hidden">
+    <section id={id} className="scroll-mt-24">
       <button
         type="button"
         className={cn(
-          "flex w-full min-w-0 items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors duration-200 hover:bg-white/[0.03]",
+          "flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors duration-200 hover:bg-white/[0.03]",
           open && "bg-white/[0.04]",
         )}
         onClick={onToggle}
         aria-expanded={open}
       >
-        <div className="min-w-0 flex-1 overflow-hidden">
-          <p className="truncate font-medium">{title}</p>
-          <p className="help truncate whitespace-nowrap">{description}</p>
+        <div className="min-w-0">
+          <p className="font-medium">{title}</p>
+          <p className="help truncate">{description}</p>
         </div>
         <motion.span
           animate={{ rotate: open ? 90 : 0 }}
@@ -75,9 +95,9 @@ function ModulePanel({
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            className="min-w-0 overflow-hidden"
+            className="overflow-hidden"
           >
-            <div className="min-w-0 space-y-3 overflow-x-clip border-t border-white/5 px-4 py-4">
+            <div className="space-y-3 border-t border-white/5 px-4 py-4">
               {children}
             </div>
           </motion.div>
@@ -269,14 +289,14 @@ export function ExtrasEditor({
   }
 
   return (
-    <div className="w-full min-w-0 space-y-6 [contain:inline-size]">
+    <div className="space-y-6">
       <p className="help">
         Tap a module to open it. Everything stays collapsed until you need it.
       </p>
 
       {!isBlack && <BlackUpsellBanner />}
 
-      <div className="w-full min-w-0 divide-y divide-white/5 overflow-hidden rounded-xl border border-white/10">
+      <div className="divide-y divide-white/5 overflow-hidden rounded-xl border border-white/10">
       <ModulePanel
         id="links"
         title={MODULES[0].title}
@@ -313,20 +333,20 @@ export function ExtrasEditor({
             </button>
           ))}
         </div>
-        <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,9.5rem)_minmax(0,1fr)_auto]">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
           <SoftSelect
-            className="min-w-0"
+            className="w-full shrink-0 sm:w-44"
             value={socialId}
             onChange={setSocialId}
             options={SOCIAL_PLATFORMS.map((s) => ({ value: s.id, label: s.label }))}
           />
           <input
-            className="soft-input min-w-0 w-full"
+            className="soft-input min-w-0 flex-1"
             placeholder={selectedSocial.placeholder}
             value={socialUrl}
             onChange={(e) => setSocialUrl(e.target.value)}
           />
-          <button type="button" className="btn btn-ghost shrink-0" onClick={addSocial}>
+          <button type="button" className="btn btn-ghost shrink-0 sm:px-5" onClick={addSocial}>
             <Icon name={selectedSocial.id} className="text-sm" />
             Add
           </button>
@@ -428,12 +448,12 @@ export function ExtrasEditor({
         open={openId === "tags"}
         onToggle={() => toggleModule("tags")}
       >
-        <div className="flex min-w-0 flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2">
           {config.tags.map((t) => (
             <button
               key={t}
               type="button"
-              className="max-w-full truncate rounded-full border border-white/10 px-3 py-1 text-sm text-white/70 hover:border-white/30"
+              className="rounded-full border border-white/10 px-3 py-1 text-sm text-white/70 hover:border-white/30"
               onClick={() =>
                 setConfig((c) => ({ ...c, tags: c.tags.filter((x) => x !== t) }))
               }
@@ -442,14 +462,14 @@ export function ExtrasEditor({
             </button>
           ))}
         </div>
-        <div className="flex min-w-0 gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
           <input
             className="soft-input min-w-0 flex-1"
             placeholder="Web Developer"
             value={tag}
             onChange={(e) => setTag(e.target.value)}
           />
-          <button type="button" className="btn btn-ghost shrink-0" onClick={addTag}>
+          <button type="button" className="btn btn-ghost shrink-0 sm:px-5" onClick={addTag}>
             <Icon name="tags" className="text-xs" />
             Add tag
           </button>
