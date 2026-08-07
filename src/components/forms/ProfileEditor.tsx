@@ -9,6 +9,7 @@ import {
   updateSlug,
 } from "@/app/actions/profile";
 import { SaveBar } from "@/components/forms/SaveBar";
+import { TemplatePicker } from "@/components/forms/TemplatePicker";
 import { Icon } from "@/components/Icon";
 
 export function ProfileEditor({
@@ -129,73 +130,29 @@ export function ProfileEditor({
         />
       </div>
 
+      <TemplatePicker
+        onLoadJson={setJsonText}
+        onMessage={setMessage}
+      />
+
       <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
-        <div className="mb-2 flex items-center gap-2">
-          <Icon name="info" className="text-sm" />
-          <p className="font-medium">AI JSON templates</p>
-        </div>
-        <p className="help mb-3">
-          Copy a template for your plan, fill it with AI, then import. Use{" "}
-          <span className="text-white/70">VOID</span> for the full schema or{" "}
-          <span className="text-white/70">Free</span> for free-safe fields only.
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            className="btn btn-primary text-sm"
-            onClick={async () => {
-              const res = await fetch("/templates/example-void.json");
-              const text = await res.text();
-              setJsonText(text);
-              setMessage("VOID example loaded - click Import & apply.");
-            }}
-          >
-            <Icon name="sparkles" className="text-xs" />
-            Load VOID example
-          </button>
-          <button
-            type="button"
-            className="btn btn-ghost text-sm"
-            onClick={async () => {
-              const res = await fetch("/templates/example-free.json");
-              const text = await res.text();
-              setJsonText(text);
-              setMessage("Free example loaded - click Import & apply.");
-            }}
-          >
-            Load Free example
-          </button>
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <p className="font-medium">Import / your JSON</p>
           <button
             type="button"
             className="btn btn-ghost text-sm"
             onClick={() => {
               navigator.clipboard.writeText(exportJson);
-              setMessage("JSON copied.");
+              setMessage("Your current JSON copied.");
             }}
           >
             <Icon name="copy" className="text-xs" />
             Copy my JSON
           </button>
-          <a
-            href="/templates/underbio-void.template.json"
-            className="btn btn-ghost text-sm"
-            download
-          >
-            <Icon name="download" className="text-xs" />
-            VOID template
-          </a>
-          <a
-            href="/templates/underbio-free.template.json"
-            className="btn btn-ghost text-sm"
-            download
-          >
-            <Icon name="download" className="text-xs" />
-            Free template
-          </a>
         </div>
         <textarea
-          className="soft-input mt-3 min-h-40 font-mono text-xs"
-          placeholder="Paste example or AI-generated JSON here…"
+          className="soft-input min-h-44 font-mono text-xs"
+          placeholder="Paste AI-generated JSON here…"
           value={jsonText}
           onChange={(e) => setJsonText(e.target.value)}
         />

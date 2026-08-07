@@ -312,20 +312,27 @@ export function HomeLanding() {
               <p className="text-xs uppercase tracking-[0.28em] text-white/35">For builders</p>
               <h2 className="section-title mt-3 text-3xl">Design with AI. Import with confidence.</h2>
               <p className="help mt-3 text-base">
-                Download the official JSON template, ask an AI to fill every option, then paste it
-                into Dashboard → Profile. Invalid schemas are rejected.
+                Pick VOID or Free, copy the AI prompt (every allowed value listed), get JSON back,
+                paste in Identity. Invalid schemas are rejected.
               </p>
             </div>
-            <div className="flex flex-wrap gap-3">
-              <a href="/templates/underbio-void.template.json" className="btn btn-primary" download>
-                <Icon name="download" className="text-xs" />
-                VOID template
+            <div className="flex w-full max-w-sm flex-col gap-2 sm:max-w-none sm:flex-row sm:flex-wrap">
+              <a
+                href="/templates/ai-guide-void.txt"
+                className="btn btn-primary justify-center"
+                download
+              >
+                <Icon name="copy" className="text-xs" />
+                VOID AI prompt
               </a>
-              <a href="/templates/underbio-free.template.json" className="btn btn-ghost" download>
-                <Icon name="download" className="text-xs" />
-                Free template
+              <a
+                href="/templates/ai-guide-free.txt"
+                className="btn btn-ghost justify-center"
+                download
+              >
+                Free AI prompt
               </a>
-              <Link href="/login" className="btn btn-ghost">
+              <Link href="/login" className="btn btn-ghost justify-center">
                 Open dashboard
               </Link>
             </div>

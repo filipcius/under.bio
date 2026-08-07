@@ -10,6 +10,7 @@ import {
   profileTemplateSchema,
 } from "../src/lib/profile-template";
 import { enforceFreePlanConfig } from "../src/lib/plan";
+import { AI_FIELD_GUIDE, buildAiPrompt } from "../src/lib/ai-template-guide";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
@@ -202,52 +203,51 @@ function wrap(
     _schemaVersion: "1.0.0",
     _updated: new Date().toISOString().slice(0, 10),
     _instructions: instructions,
+    _aiGuide: AI_FIELD_GUIDE,
     ...rest,
   };
 }
 
-const voidOut = wrap(
-  "void",
-  voidFilled as unknown as Record<string, unknown>,
-  "VOID / full under.bio AI template. Fill every field, then import in Dashboard → Identity → Import JSON. Uses VOID-only options (particles, VHS, cursors, Discord cards, neon tags, etc.). Free accounts will have locked fields stripped on save.",
-);
+const voidBrief =
+  "VOID template. Paste into an AI WITH _aiGuide (lists every allowed enum). Fill all fields. Import in Dashboard → Identity. Free accounts will strip VOID-only values on save.";
+const freeBrief =
+  "FREE template. Paste into an AI WITH _aiGuide. Only free-safe enums. Caps: 6 links, 6 badges, 3 tags, showcases []. Import in Dashboard → Identity.";
 
-const freeOut = wrap(
-  "free",
-  freeFilled as unknown as Record<string, unknown>,
-  "FREE under.bio AI template. Only free-tier options. Max 6 links, 6 badges, 3 tags, no Discord showcase cards, no custom cursors/particles/VHS. Import in Dashboard → Identity → Import JSON.",
-);
+const voidOut = wrap("void", voidFilled as unknown as Record<string, unknown>, voidBrief);
+const freeOut = wrap("free", freeFilled as unknown as Record<string, unknown>, freeBrief);
+
+const emptyVoidBody = {
+  ...DEFAULT_PROFILE_TEMPLATE,
+  meta: {
+    slug: "yourname",
+    displayName: "Your Name",
+    description: "",
+    location: "",
+    pageTitle: "under.bio",
+    statusText: "",
+  },
+};
+const emptyFreeBody = enforceFreePlanConfig({
+  ...DEFAULT_PROFILE_TEMPLATE,
+  meta: {
+    slug: "yourname",
+    displayName: "Your Name",
+    description: "",
+    location: "",
+    pageTitle: "under.bio",
+    statusText: "",
+  },
+});
 
 const emptyVoid = wrap(
   "void",
-  {
-    ...DEFAULT_PROFILE_TEMPLATE,
-    meta: {
-      slug: "yourname",
-      displayName: "Your Name",
-      description: "",
-      location: "",
-      pageTitle: "under.bio",
-      statusText: "",
-    },
-  } as unknown as Record<string, unknown>,
-  "Empty VOID schema shell — all current fields with defaults. Give to an AI to fill a full profile.",
+  emptyVoidBody as unknown as Record<string, unknown>,
+  voidBrief,
 );
-
 const emptyFree = wrap(
   "free",
-  enforceFreePlanConfig({
-    ...DEFAULT_PROFILE_TEMPLATE,
-    meta: {
-      slug: "yourname",
-      displayName: "Your Name",
-      description: "",
-      location: "",
-      pageTitle: "under.bio",
-      statusText: "",
-    },
-  }) as unknown as Record<string, unknown>,
-  "Empty FREE schema shell — free-safe defaults only. Give to an AI to fill a free profile.",
+  emptyFreeBody as unknown as Record<string, unknown>,
+  freeBrief,
 );
 
 const targets: [string, unknown][] = [
@@ -272,4 +272,30 @@ for (const [rel, data] of targets) {
   console.log("wrote", rel);
 }
 
-console.log("OK — void + free templates regenerated");
+const textGuides: [string, string][] = [
+  [
+    "public/templates/ai-guide-void.txt",
+    buildAiPrompt("void", JSON.stringify(emptyVoid, null, 2)),
+  ],
+  [
+    "public/templates/ai-guide-free.txt",
+    buildAiPrompt("free", JSON.stringify(emptyFree, null, 2)),
+  ],
+  [
+    "templates/ai-guide-void.txt",
+    buildAiPrompt("void", JSON.stringify(emptyVoid, null, 2)),
+  ],
+  [
+    "templates/ai-guide-free.txt",
+    buildAiPrompt("free", JSON.stringify(emptyFree, null, 2)),
+  ],
+];
+
+for (const [rel, text] of textGuides) {
+  const path = join(root, rel);
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, text, "utf8");
+  console.log("wrote", rel);
+}
+
+console.log("OK — void + free templates + AI guides regenerated");
