@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Icon } from "@/components/Icon";
+import { DISCORD_INVITE_URL } from "@/lib/site";
 
 function loginErrorMessage(error?: string) {
   switch (error) {
@@ -72,8 +73,18 @@ export default async function LoginPage({
             </button>
           </form>
 
+          <a
+            href={DISCORD_INVITE_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="btn btn-ghost mt-3 w-full"
+          >
+            <Icon name="external" className="text-xs" />
+            Join the Discord server first
+          </a>
+
           <p className="help mt-4">
-            One account = one page. Slugs cannot be shared.{" "}
+            Not in the server yet? Join above, then come back and sign in. One account = one page.{" "}
             <Link href="/" className="text-white/70 underline-offset-2 hover:underline">
               Back home
             </Link>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { Icon } from "@/components/Icon";
+import { DISCORD_INVITE_URL } from "@/lib/site";
 
 const easeOut = [0.22, 1, 0.36, 1] as const;
 
@@ -130,10 +131,25 @@ export function HomeLanding() {
             <Icon name="discord" className="text-sm" glow={false} />
             Continue with Discord
           </Link>
-          <Link href="/black" className="btn btn-ghost">
-            under VOID · $4.99
-          </Link>
+          <a
+            href={DISCORD_INVITE_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="btn btn-ghost"
+          >
+            <Icon name="external" className="text-xs" />
+            Join Discord
+          </a>
         </motion.div>
+        <motion.p
+          custom={3.5}
+          variants={fadeUp}
+          initial="hidden"
+          animate="show"
+          className="mt-3 text-sm text-white/35"
+        >
+          Server membership is required before you can sign in.
+        </motion.p>
 
         <motion.div
           custom={4}
@@ -338,11 +354,19 @@ export function HomeLanding() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.14 }}
-            className="mt-8 flex justify-center"
+            className="mt-8 flex flex-wrap items-center justify-center gap-3"
           >
-            <Link href="/login" className="btn btn-primary px-8">
+            <a
+              href={DISCORD_INVITE_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="btn btn-discord px-8"
+            >
               <Icon name="discord" className="text-sm" glow={false} />
-              Continue with Discord
+              Join Discord
+            </a>
+            <Link href="/login" className="btn btn-primary px-8">
+              Sign in
             </Link>
           </motion.div>
         </div>

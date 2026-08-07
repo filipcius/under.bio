@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DISCORD_INVITE_URL } from "@/lib/site";
 
 export function Footer() {
   return (
@@ -21,7 +22,7 @@ export function Footer() {
             FAQ
           </Link>
           <a
-            href={process.env.NEXT_PUBLIC_DISCORD_INVITE || "#"}
+            href={DISCORD_INVITE_URL}
             className="hover:text-white/70"
             target="_blank"
             rel="noreferrer"
