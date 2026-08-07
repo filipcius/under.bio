@@ -87,7 +87,8 @@ export function DiscordShowcase({
         href={live.inviteUrl}
         target="_blank"
         rel="noreferrer"
-        className="rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-black transition hover:scale-105 hover:bg-white/90"
+        className="rounded-full bg-white px-4 py-1.5 text-sm font-semibold transition hover:scale-105 hover:bg-white/90"
+        style={{ color: "#0a0a0a" }}
       >
         Join
       </a>
