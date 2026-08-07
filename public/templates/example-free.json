@@ -1,16 +1,16 @@
 {
   "version": "1.0.0",
-  "_tier": "void",
+  "_tier": "free",
   "_schemaVersion": "1.0.0",
   "_updated": "2026-08-07",
-  "_instructions": "Empty VOID schema shell — all current fields with defaults. Give to an AI to fill a full profile.",
+  "_instructions": "FREE under.bio AI template. Only free-tier options. Max 6 links, 6 badges, 3 tags, no Discord showcase cards, no custom cursors/particles/VHS. Import in Dashboard → Identity → Import JSON.",
   "meta": {
     "slug": "yourname",
     "displayName": "Your Name",
-    "description": "",
-    "location": "",
-    "pageTitle": "under.bio",
-    "statusText": ""
+    "description": "Short bio.\nSecond line ok.",
+    "location": "City / Region",
+    "pageTitle": "yourname | under.bio",
+    "statusText": "Custom status"
   },
   "options": {
     "showThemeOnIcons": true,
@@ -30,7 +30,7 @@
     "showStatusDot": true,
     "showBio": true,
     "showMusic": true,
-    "showCornerAccents": true
+    "showCornerAccents": false
   },
   "layout": {
     "style": "default",
@@ -44,7 +44,7 @@
     "presenceStyle": "card"
   },
   "audio": {
-    "trackPlayer": "none",
+    "trackPlayer": "embed",
     "playbackMode": "loop",
     "autoPlay": true,
     "defaultVolume": 80,
@@ -55,9 +55,9 @@
     "eqColor": "white"
   },
   "page": {
-    "titleAnimation": "none",
+    "titleAnimation": "shine",
     "titleAnimationSpeed": 50,
-    "overlay": "none",
+    "overlay": "vignette",
     "overlayOpacity": 55,
     "enterAnimation": "slide-up",
     "enterAnimationSpeed": 55,
@@ -208,9 +208,35 @@
     "animatedGradient": false,
     "zoom": 100
   },
-  "links": [],
-  "badges": [],
-  "tags": [],
-  "tracks": [],
+  "links": [
+    {
+      "label": "Discord",
+      "url": "https://discord.com/users/000000000000000000",
+      "icon": "discord"
+    },
+    {
+      "label": "Instagram",
+      "url": "https://instagram.com/you",
+      "icon": "instagram"
+    }
+  ],
+  "badges": [
+    {
+      "name": "Star",
+      "icon": "star",
+      "description": "Hover tip"
+    }
+  ],
+  "tags": [
+    "design",
+    "music"
+  ],
+  "tracks": [
+    {
+      "title": "Artist - Track",
+      "url": "",
+      "cover": ""
+    }
+  ],
   "showcases": []
 }

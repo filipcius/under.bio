@@ -1,9 +1,9 @@
 {
   "version": "1.0.0",
-  "_tier": "void",
+  "_tier": "free",
   "_schemaVersion": "1.0.0",
   "_updated": "2026-08-07",
-  "_instructions": "Empty VOID schema shell — all current fields with defaults. Give to an AI to fill a full profile.",
+  "_instructions": "Empty FREE schema shell — free-safe defaults only. Give to an AI to fill a free profile.",
   "meta": {
     "slug": "yourname",
     "displayName": "Your Name",
@@ -30,7 +30,7 @@
     "showStatusDot": true,
     "showBio": true,
     "showMusic": true,
-    "showCornerAccents": true
+    "showCornerAccents": false
   },
   "layout": {
     "style": "default",

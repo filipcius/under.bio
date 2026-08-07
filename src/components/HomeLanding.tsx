@@ -317,9 +317,13 @@ export function HomeLanding() {
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
-              <a href="/templates/underbio-profile.template.json" className="btn btn-primary">
+              <a href="/templates/underbio-void.template.json" className="btn btn-primary" download>
                 <Icon name="download" className="text-xs" />
-                Get template
+                VOID template
+              </a>
+              <a href="/templates/underbio-free.template.json" className="btn btn-ghost" download>
+                <Icon name="download" className="text-xs" />
+                Free template
               </a>
               <Link href="/login" className="btn btn-ghost">
                 Open dashboard

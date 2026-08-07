@@ -132,25 +132,38 @@ export function ProfileEditor({
       <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
         <div className="mb-2 flex items-center gap-2">
           <Icon name="info" className="text-sm" />
-          <p className="font-medium">AI JSON template</p>
+          <p className="font-medium">AI JSON templates</p>
         </div>
         <p className="help mb-3">
-          Export your config, paste it into an AI with the official template, then import the
-          result. The JSON must match the under.bio schema.
+          Copy a template for your plan, fill it with AI, then import. Use{" "}
+          <span className="text-white/70">VOID</span> for the full schema or{" "}
+          <span className="text-white/70">Free</span> for free-safe fields only.
         </p>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
             className="btn btn-primary text-sm"
             onClick={async () => {
-              const res = await fetch("/templates/example-profile.json");
+              const res = await fetch("/templates/example-void.json");
               const text = await res.text();
               setJsonText(text);
-              setMessage("Example JSON loaded - click Import & apply.");
+              setMessage("VOID example loaded - click Import & apply.");
             }}
           >
             <Icon name="sparkles" className="text-xs" />
-            Load example JSON
+            Load VOID example
+          </button>
+          <button
+            type="button"
+            className="btn btn-ghost text-sm"
+            onClick={async () => {
+              const res = await fetch("/templates/example-free.json");
+              const text = await res.text();
+              setJsonText(text);
+              setMessage("Free example loaded - click Import & apply.");
+            }}
+          >
+            Load Free example
           </button>
           <button
             type="button"
@@ -163,13 +176,21 @@ export function ProfileEditor({
             <Icon name="copy" className="text-xs" />
             Copy my JSON
           </button>
-          <a href="/templates/example-profile.json" className="btn btn-ghost text-sm" target="_blank">
+          <a
+            href="/templates/underbio-void.template.json"
+            className="btn btn-ghost text-sm"
+            download
+          >
             <Icon name="download" className="text-xs" />
-            Open example
+            VOID template
           </a>
-          <a href="/templates/underbio-profile.template.json" className="btn btn-ghost text-sm">
+          <a
+            href="/templates/underbio-free.template.json"
+            className="btn btn-ghost text-sm"
+            download
+          >
             <Icon name="download" className="text-xs" />
-            Empty template
+            Free template
           </a>
         </div>
         <textarea

@@ -167,10 +167,12 @@ export async function importProfileJson(raw: string): Promise<ActionResult> {
     return { ok: false, error: "Invalid JSON." };
   }
 
-  // Strip helper keys for AI templates
+  // Strip helper keys for AI templates (_tier, _instructions, …)
   if (json && typeof json === "object") {
     const obj = { ...(json as Record<string, unknown>) };
-    delete obj._instructions;
+    for (const key of Object.keys(obj)) {
+      if (key.startsWith("_")) delete obj[key];
+    }
     json = obj;
   }
 

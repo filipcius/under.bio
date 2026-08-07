@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "templates": "npx tsx scripts/generate-templates.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

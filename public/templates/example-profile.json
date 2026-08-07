@@ -1,13 +1,16 @@
 {
   "version": "1.0.0",
-  "_instructions": "Dashboard → Identity → Load example JSON → Import & apply. Uses real site media files. Replace Discord invite in Modules, text, and uploads with your own. Slug stays locked to your account.",
+  "_tier": "void",
+  "_schemaVersion": "1.0.0",
+  "_updated": "2026-08-07",
+  "_instructions": "VOID / full under.bio AI template. Fill every field, then import in Dashboard → Identity → Import JSON. Uses VOID-only options (particles, VHS, cursors, Discord cards, neon tags, etc.). Free accounts will have locked fields stripped on save.",
   "meta": {
-    "slug": "example",
-    "displayName": "filipekkk",
-    "description": "ig: ogf3llas.\nproject owner of OdraRP & undergrnd.",
-    "location": "zachodnio-pomorskie",
-    "pageTitle": "filipekkk | under.bio",
-    "statusText": "ig: ogf3llas_"
+    "slug": "yourname",
+    "displayName": "Your Name",
+    "description": "Short bio.\nSecond line ok.",
+    "location": "City / Region",
+    "pageTitle": "yourname | under.bio",
+    "statusText": "Custom status"
   },
   "options": {
     "showThemeOnIcons": true,
@@ -22,127 +25,229 @@
     "showUnderBadge": true,
     "showBadges": true,
     "showRank": true,
-    "showVerified": true
+    "showVerified": true,
+    "showOwnerBadge": true,
+    "showStatusDot": true,
+    "showBio": true,
+    "showMusic": true,
+    "showCornerAccents": true
   },
   "layout": {
     "style": "default",
     "alignment": "left",
-    "gap": 12
+    "gap": 12,
+    "contentScale": 100,
+    "compact": false,
+    "avatarSide": "left",
+    "socialPosition": "under-bio",
+    "tagsPosition": "under-badges",
+    "presenceStyle": "card"
   },
   "audio": {
     "trackPlayer": "embed",
     "playbackMode": "loop",
     "autoPlay": true,
     "defaultVolume": 80,
-    "visualizer": true
+    "visualizer": true,
+    "playerStyle": "glass",
+    "showCover": true,
+    "eqStyle": "bars",
+    "eqColor": "white"
   },
   "page": {
     "titleAnimation": "shine",
-    "titleAnimationSpeed": 60,
-    "overlay": "vignette",
-    "enterAnimation": "slide-up",
+    "titleAnimationSpeed": 50,
+    "overlay": "vhs",
+    "overlayOpacity": 55,
+    "enterAnimation": "fade",
     "enterAnimationSpeed": 55,
     "revealText": "Click to enter",
     "revealBlur": 12,
-    "particles": "dust"
+    "revealStyle": "fade",
+    "particles": "dust",
+    "particleDensity": 40,
+    "particleSpeed": 50,
+    "particleColor": "warm"
+  },
+  "effects": {
+    "aurora": "soft",
+    "auroraIntensity": 40,
+    "floatingOrbs": false,
+    "orbCount": 4,
+    "orbIntensity": 35,
+    "ambientPulse": false,
+    "rgbSplit": false,
+    "rgbIntensity": 4,
+    "bloom": false,
+    "bloomIntensity": 30,
+    "filmBars": false,
+    "filmBarSize": 28,
+    "bgMotion": "none",
+    "bgMotionSpeed": 40,
+    "cardSheen": true,
+    "borderAnimate": false,
+    "borderAnimateSpeed": 40,
+    "nameGradient": true,
+    "nameGradientFrom": "#FFFFFF",
+    "nameGradientTo": "#A8A8A8",
+    "magneticSocials": false,
+    "hoverLift": 4,
+    "watermark": false,
+    "watermarkText": "under.bio",
+    "watermarkOpacity": 8,
+    "shakeBadges": false,
+    "pulseRank": true,
+    "spotlight": false,
+    "spotlightIntensity": 35
   },
   "appearance": {
     "themeColor": "#FFFFFF",
+    "accentSecondary": "#A8A8A8",
     "primaryText": "#FFFFFF",
     "secondaryText": "#A8A8A8",
     "font": "syne",
-    "usernameSparkles": "white",
+    "bioFont": "inherit",
+    "usernameSparkles": "none",
     "avatarRadius": 50,
-    "avatarDecoration": "glow",
+    "avatarDecoration": "ring",
     "avatarSize": 76,
-    "cursor": "dot",
+    "avatarBorderWidth": 0,
+    "avatarBorderColor": "#FFFFFF",
+    "avatarShadow": 40,
+    "avatarOffsetY": 0,
+    "cursor": "minimal",
     "customCursorUrl": "",
-    "cursorTrail": "none",
+    "cursorSize": 12,
+    "cursorTrail": "fade",
+    "cursorTrailLength": 10,
     "clickSound": "none",
-    "tagStyle": "pill",
-    "iconStyle": "colored",
-    "grain": 18,
-    "accentGlow": 40,
-    "nameSize": 28
+    "tagStyle": "ghost",
+    "tagSize": 12,
+    "tagBgOpacity": 0,
+    "tagBorderWidth": 1,
+    "iconStyle": "mono",
+    "socialShape": "soft",
+    "socialSize": 40,
+    "socialGap": 10,
+    "socialBgOpacity": 8,
+    "socialGlow": 20,
+    "badgeSize": 32,
+    "badgeGap": 6,
+    "badgeGlow": true,
+    "badgeStyle": "minimal",
+    "grain": 0,
+    "accentGlow": 35,
+    "nameSize": 28,
+    "nameWeight": 700,
+    "nameLetterSpacing": 0,
+    "nameUppercase": false,
+    "nameItalic": false,
+    "bioSize": 14,
+    "bioOpacity": 100,
+    "bioItalic": false,
+    "bioAlign": "inherit",
+    "bioLineHeight": 160,
+    "dividerStyle": "line",
+    "statusDotColor": "#34D399",
+    "textShadow": 0,
+    "hueRotate": 0,
+    "saturate": 100,
+    "contrast": 100,
+    "brightness": 100,
+    "globalBlur": 0
   },
   "box": {
     "width": 560,
     "innerSpacing": 20,
     "color": "#141414",
-    "opacity": 92,
+    "opacity": 100,
     "radius": 18,
-    "blur": 12,
-    "tilt": "standard",
+    "blur": 0,
+    "tilt": "subtle",
+    "tiltScale": 102,
     "shadowColor": "#000000",
     "shadowOpacity": 45,
+    "shadowBlur": 50,
+    "shadowY": 18,
     "borderWidth": 1,
     "borderColor": "#FFFFFF",
-    "borderOpacity": 10,
+    "borderOpacity": 12,
     "borderStyle": "solid",
-    "glow": true
+    "glow": false,
+    "innerGlow": false,
+    "innerGlowOpacity": 20,
+    "pattern": "none",
+    "patternOpacity": 10,
+    "gradientFill": false,
+    "gradientFrom": "#141414",
+    "gradientTo": "#0A0A0A",
+    "saturate": 100
   },
   "banner": {
-    "url": "/media/banner.jpg",
+    "url": "",
     "opacity": 100,
     "blur": 0,
-    "height": 140
+    "height": 140,
+    "position": "center",
+    "overlay": "gradient",
+    "overlayOpacity": 55,
+    "saturate": 100,
+    "grayscale": 0,
+    "parallax": false
   },
   "background": {
     "url": "",
     "size": "cover",
     "blur": 0,
     "opacity": 100,
-    "color": "#0A0A0A"
+    "color": "#0A0A0A",
+    "position": "center",
+    "dim": 0,
+    "gradient": "radial",
+    "gradientColor": "#1A1A1A",
+    "animatedGradient": false,
+    "zoom": 100
   },
   "links": [
     {
       "label": "Discord",
-      "url": "https://discord.com/users/1494801028619571221",
+      "url": "https://discord.com/users/000000000000000000",
       "icon": "discord"
     },
     {
       "label": "Instagram",
-      "url": "https://instagram.com/ogf3llas_",
+      "url": "https://instagram.com/you",
       "icon": "instagram"
-    },
-    {
-      "label": "YouTube",
-      "url": "https://youtube.com",
-      "icon": "youtube"
-    },
-    {
-      "label": "Steam",
-      "url": "https://steamcommunity.com",
-      "icon": "steam"
-    },
-    {
-      "label": "Spotify",
-      "url": "https://open.spotify.com",
-      "icon": "spotify"
-    },
-    {
-      "label": "GitHub",
-      "url": "https://github.com",
-      "icon": "github"
     }
   ],
   "badges": [
-    { "name": "Star", "icon": "star", "description": "Star" },
-    { "name": "Crown", "icon": "crown", "description": "Crown" },
-    { "name": "Fire", "icon": "fire", "description": "Fire" },
-    { "name": "Code", "icon": "code", "description": "Code" },
-    { "name": "Music", "icon": "music", "description": "Music" },
-    { "name": "Shield", "icon": "shield", "description": "Shield" },
-    { "name": "Trophy", "icon": "trophy", "description": "Trophy" },
-    { "name": "Rocket", "icon": "rocket", "description": "Rocket" }
-  ],
-  "tags": ["Web Developer", "UI/UX Designer", "odraroleplay"],
-  "tracks": [
     {
-      "title": "macias abaddon - biale af",
-      "url": "/audio/macias-abaddon-biale-af.mp3",
-      "cover": "/media/track-cover.webp"
+      "name": "Star",
+      "icon": "star",
+      "description": "Hover tip"
     }
   ],
-  "showcases": []
+  "tags": [
+    "design",
+    "music"
+  ],
+  "tracks": [
+    {
+      "title": "Artist - Track",
+      "url": "",
+      "cover": ""
+    }
+  ],
+  "showcases": [
+    {
+      "type": "discord",
+      "inviteCode": "xkyQjTsGts",
+      "title": "My Discord Server",
+      "subtitle": "",
+      "url": "https://discord.gg/xkyQjTsGts",
+      "image": "",
+      "online": 0,
+      "members": 0
+    }
+  ]
 }
