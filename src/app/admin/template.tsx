@@ -3,6 +3,7 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { usePathname } from "next/navigation";
 
+/** Opacity-only — avoid transform/filter so fixed/sticky UI stays viewport-relative. */
 export default function AdminTemplate({
   children,
 }: {
@@ -14,9 +15,9 @@ export default function AdminTemplate({
   return (
     <motion.div
       key={pathname}
-      initial={reduce ? false : { opacity: 0, y: 12, filter: "blur(5px)" }}
-      animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-      transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+      initial={reduce ? false : { opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.22, ease: "easeOut" }}
     >
       {children}
     </motion.div>
