@@ -615,13 +615,279 @@ select {
   animation: equalizer 0.8s ease-in-out infinite;
 }
 
-.name-shine {
-  background: linear-gradient(90deg, #fff 0%, #fff 40%, #9a9a9a 50%, #fff 60%, #fff 100%);
-  background-size: 200% 100%;
+/* ——— Name animations (clean / swag) ——— */
+.ub-name {
+  display: inline-block;
+  position: relative;
+  will-change: transform, filter, opacity;
+}
+
+.ub-name-letter {
+  display: inline-block;
+  will-change: transform;
+}
+
+.ub-name--shine {
+  background-image: linear-gradient(
+    105deg,
+    #e8e8e8 0%,
+    #ffffff 42%,
+    #ffffff 48%,
+    #bdbdbd 52%,
+    #f2f2f2 58%,
+    #e8e8e8 100%
+  );
+  background-size: 220% 100%;
   -webkit-background-clip: text;
   background-clip: text;
-  color: transparent;
-  animation: shine-move 2.8s linear infinite;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent;
+  animation: ub-name-shine var(--ub-name-dur, 2.6s) linear infinite;
+}
+
+@keyframes ub-name-shine {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -120% 0;
+  }
+}
+
+.ub-name--rainbow {
+  background-image: linear-gradient(
+    90deg,
+    #fff 0%,
+    #ffd6e0 16%,
+    #ffe9b0 32%,
+    #c8f7d4 48%,
+    #c2e4ff 64%,
+    #e4d4ff 80%,
+    #fff 100%
+  );
+  background-size: 240% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent;
+  animation: ub-name-shine var(--ub-name-dur, 2.8s) linear infinite;
+}
+
+.ub-name--neon {
+  color: #fff;
+  text-shadow:
+    0 0 4px rgba(255, 255, 255, 0.55),
+    0 0 14px color-mix(in srgb, var(--ub-name-theme, #fff) 70%, transparent),
+    0 0 28px color-mix(in srgb, var(--ub-name-theme, #fff) 35%, transparent);
+  animation: ub-name-neon var(--ub-name-dur, 2.2s) ease-in-out infinite;
+}
+
+@keyframes ub-name-neon {
+  0%,
+  100% {
+    opacity: 1;
+    filter: brightness(1);
+    text-shadow:
+      0 0 4px rgba(255, 255, 255, 0.5),
+      0 0 12px color-mix(in srgb, var(--ub-name-theme, #fff) 55%, transparent),
+      0 0 24px color-mix(in srgb, var(--ub-name-theme, #fff) 25%, transparent);
+  }
+  50% {
+    opacity: 0.92;
+    filter: brightness(1.15);
+    text-shadow:
+      0 0 6px rgba(255, 255, 255, 0.75),
+      0 0 20px color-mix(in srgb, var(--ub-name-theme, #fff) 80%, transparent),
+      0 0 40px color-mix(in srgb, var(--ub-name-theme, #fff) 40%, transparent);
+  }
+}
+
+.ub-name--flashing {
+  animation: ub-name-flash var(--ub-name-dur, 1.8s) ease-in-out infinite;
+}
+
+@keyframes ub-name-flash {
+  0%,
+  100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  45% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  50% {
+    opacity: 0.55;
+    filter: brightness(1.35);
+  }
+  55% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
+
+.ub-name--blur {
+  animation: ub-name-blur var(--ub-name-dur, 2.8s) ease-in-out infinite;
+}
+
+@keyframes ub-name-blur {
+  0%,
+  100% {
+    filter: blur(0);
+    opacity: 1;
+    letter-spacing: inherit;
+  }
+  50% {
+    filter: blur(1.2px);
+    opacity: 0.88;
+  }
+}
+
+.ub-name--wave .ub-name-letter {
+  animation: ub-name-wave var(--ub-name-dur, 1.6s) ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 0.045s);
+}
+
+@keyframes ub-name-wave {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-0.22em);
+  }
+}
+
+.ub-name--bounce .ub-name-letter {
+  animation: ub-name-bounce var(--ub-name-dur, 1.5s) cubic-bezier(0.34, 1.4, 0.64, 1) infinite;
+  animation-delay: calc(var(--i, 0) * 0.04s);
+}
+
+@keyframes ub-name-bounce {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  40% {
+    transform: translateY(-0.16em) scale(1.04);
+  }
+  60% {
+    transform: translateY(0.02em) scale(0.98);
+  }
+}
+
+.ub-name--glitch {
+  position: relative;
+}
+
+.ub-name--glitch .ub-name-glitch-main {
+  position: relative;
+  z-index: 1;
+}
+
+.ub-name--glitch::before,
+.ub-name--glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ub-name--glitch::before {
+  color: #7dd3fc;
+  z-index: 0;
+  animation: ub-name-glitch-a var(--ub-name-dur, 2s) steps(2, end) infinite;
+  clip-path: inset(0 0 55% 0);
+  opacity: 0.75;
+}
+
+.ub-name--glitch::after {
+  color: #fda4af;
+  z-index: 0;
+  animation: ub-name-glitch-b var(--ub-name-dur, 2s) steps(2, end) infinite;
+  clip-path: inset(45% 0 0 0);
+  opacity: 0.75;
+}
+
+@keyframes ub-name-glitch-a {
+  0%,
+  90%,
+  100% {
+    transform: translate(0);
+  }
+  92% {
+    transform: translate(-2px, 0);
+  }
+  94% {
+    transform: translate(2px, -1px);
+  }
+  96% {
+    transform: translate(-1px, 1px);
+  }
+}
+
+@keyframes ub-name-glitch-b {
+  0%,
+  90%,
+  100% {
+    transform: translate(0);
+  }
+  91% {
+    transform: translate(2px, 0);
+  }
+  93% {
+    transform: translate(-2px, 1px);
+  }
+  97% {
+    transform: translate(1px, -1px);
+  }
+}
+
+.ub-name--typing {
+  display: inline-flex;
+  align-items: baseline;
+  min-height: 1.15em;
+}
+
+.ub-name-caret {
+  display: inline-block;
+  width: 0.08em;
+  height: 0.9em;
+  margin-left: 0.12em;
+  background: currentColor;
+  border-radius: 1px;
+  vertical-align: -0.05em;
+  animation: ub-name-caret 0.9s steps(1, end) infinite;
+  opacity: 0.75;
+}
+
+@keyframes ub-name-caret {
+  0%,
+  49% {
+    opacity: 0.8;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ub-name--shine,
+  .ub-name--rainbow,
+  .ub-name--neon,
+  .ub-name--flashing,
+  .ub-name--blur,
+  .ub-name--wave .ub-name-letter,
+  .ub-name--bounce .ub-name-letter,
+  .ub-name--glitch::before,
+  .ub-name--glitch::after,
+  .ub-name-caret {
+    animation: none !important;
+  }
 }
 
 @keyframes shine-move {
@@ -683,22 +949,6 @@ select {
   font-family: var(--font-space-mono), ui-monospace, monospace;
 }
 
-.name-rainbow {
-  background: linear-gradient(
-    90deg,
-    #fff 0%,
-    #fca5a5 20%,
-    #fde68a 40%,
-    #86efac 60%,
-    #93c5fd 80%,
-    #fff 100%
-  );
-  background-size: 200% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: shine-move 2.4s linear infinite;
-}
 
 .ub-card-sheen {
   background: linear-gradient(

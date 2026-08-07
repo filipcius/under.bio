@@ -665,6 +665,7 @@ export function PublicProfile({
                   speed={config.page.titleAnimationSpeed}
                   className="section-title"
                   style={nameStyle}
+                  theme={theme}
                 />
                 {config.options.showVerified && (discordVerified || isOwner) && (
                   <VerifiedBadge size={18} />

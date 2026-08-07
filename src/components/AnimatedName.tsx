@@ -1,6 +1,19 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
+
+type NameMode =
+  | "none"
+  | "flashing"
+  | "typing"
+  | "glitch"
+  | "shine"
+  | "wave"
+  | "bounce"
+  | "neon"
+  | "rainbow"
+  | "blur";
 
 export function AnimatedName({
   text,
@@ -8,149 +21,136 @@ export function AnimatedName({
   speed,
   className,
   style,
+  theme = "#ffffff",
 }: {
   text: string;
-  mode:
-    | "none"
-    | "flashing"
-    | "typing"
-    | "glitch"
-    | "shine"
-    | "wave"
-    | "bounce"
-    | "neon"
-    | "rainbow"
-    | "blur";
+  mode: NameMode;
   speed: number;
   className?: string;
   style?: React.CSSProperties;
+  theme?: string;
 }) {
-  const duration = Math.max(0.35, 2.2 - speed / 70);
+  // Higher speed = snappier. Range ~0.9s … 3.4s
+  const durSec = Math.max(0.9, 3.4 - speed / 42);
+  const dur = `${durSec}s`;
+  const baseStyle = {
+    ...style,
+    ["--ub-name-dur" as string]: dur,
+    ["--ub-name-theme" as string]: theme,
+  } as React.CSSProperties;
 
-  if (mode === "shine" || mode === "rainbow") {
+  if (mode === "none") {
     return (
-      <h1
-        className={`${className} ${mode === "rainbow" ? "name-rainbow" : "name-shine"}`}
-        style={style}
-      >
+      <h1 className={className} style={style}>
         {text}
       </h1>
     );
   }
 
-  if (mode === "flashing" || mode === "neon") {
-    return (
-      <motion.h1
-        className={className}
-        style={style}
-        animate={{
-          opacity: [1, mode === "neon" ? 0.75 : 0.35, 1],
-          textShadow:
-            mode === "neon"
-              ? [
-                  "0 0 6px currentColor",
-                  "0 0 22px currentColor",
-                  "0 0 6px currentColor",
-                ]
-              : ["0 0 0px #fff", "0 0 18px #fff", "0 0 0px #fff"],
-        }}
-        transition={{ duration, repeat: Infinity, ease: "easeInOut" }}
-      >
-        {text}
-      </motion.h1>
-    );
-  }
-
-  if (mode === "glitch") {
-    return (
-      <motion.h1
-        className={`${className} relative`}
-        style={style}
-        animate={{ x: [0, -1, 1, 0], skewX: [0, -2, 2, 0] }}
-        transition={{ duration: duration * 0.55, repeat: Infinity }}
-      >
-        <span className="absolute inset-0 -translate-x-[2px] text-cyan-300/40" aria-hidden>
-          {text}
-        </span>
-        <span className="absolute inset-0 translate-x-[2px] text-rose-300/40" aria-hidden>
-          {text}
-        </span>
-        <span className="relative">{text}</span>
-      </motion.h1>
-    );
-  }
-
   if (mode === "typing") {
-    return (
-      <motion.h1 className={className} style={style}>
-        <motion.span
-          className="inline-block overflow-hidden whitespace-nowrap border-r border-white/50 pr-1"
-          initial={{ width: 0 }}
-          animate={{ width: "100%" }}
-          transition={{
-            duration: duration + 0.6,
-            ease: "easeInOut",
-            repeat: Infinity,
-            repeatDelay: 1.2,
-          }}
-        >
-          {text}
-        </motion.span>
-      </motion.h1>
-    );
+    return <TypingName text={text} className={className} style={baseStyle} durSec={durSec} />;
   }
 
-  if (mode === "wave") {
+  if (mode === "wave" || mode === "bounce") {
+    const letters = Array.from(text);
     return (
-      <h1 className={className} style={style}>
-        {text.split("").map((ch, i) => (
-          <motion.span
+      <h1
+        className={cn(className, "ub-name", `ub-name--${mode}`)}
+        style={baseStyle}
+        aria-label={text}
+      >
+        {letters.map((ch, i) => (
+          <span
             key={`${ch}-${i}`}
-            className="inline-block"
-            animate={{ y: [0, -6, 0] }}
-            transition={{
-              duration: 1.2,
-              repeat: Infinity,
-              delay: i * 0.05,
-              ease: "easeInOut",
-            }}
+            className="ub-name-letter"
+            style={{ ["--i" as string]: i }}
           >
             {ch === " " ? "\u00A0" : ch}
-          </motion.span>
+          </span>
         ))}
       </h1>
     );
   }
 
-  if (mode === "bounce") {
+  if (mode === "glitch") {
     return (
-      <motion.h1
-        className={className}
-        style={style}
-        animate={{ y: [0, -5, 0], scale: [1, 1.03, 1] }}
-        transition={{ duration: duration, repeat: Infinity, ease: "easeInOut" }}
+      <h1
+        className={cn(className, "ub-name ub-name--glitch")}
+        style={baseStyle}
+        data-text={text}
       >
-        {text}
-      </motion.h1>
-    );
-  }
-
-  if (mode === "blur") {
-    return (
-      <motion.h1
-        className={className}
-        style={style}
-        animate={{ filter: ["blur(0px)", "blur(2px)", "blur(0px)"], opacity: [1, 0.85, 1] }}
-        transition={{ duration: duration * 1.2, repeat: Infinity, ease: "easeInOut" }}
-      >
-        {text}
-      </motion.h1>
+        <span className="ub-name-glitch-main">{text}</span>
+      </h1>
     );
   }
 
   return (
-    <h1 className={className} style={style}>
+    <h1
+      className={cn(className, "ub-name", `ub-name--${mode}`)}
+      style={baseStyle}
+    >
       {text}
+    </h1>
+  );
+}
+
+function TypingName({
+  text,
+  className,
+  style,
+  durSec,
+}: {
+  text: string;
+  className?: string;
+  style?: React.CSSProperties;
+  durSec: number;
+}) {
+  const [shown, setShown] = useState("");
+
+  useEffect(() => {
+    let i = 0;
+    let phase: "type" | "hold" | "erase" = "type";
+    let timer: number;
+
+    const stepMs = Math.max(28, (durSec * 1000) / Math.max(text.length, 1) / 1.6);
+    const holdMs = 1100;
+    const eraseMs = Math.max(18, stepMs * 0.55);
+
+    const tick = () => {
+      if (phase === "type") {
+        i += 1;
+        setShown(text.slice(0, i));
+        if (i >= text.length) {
+          phase = "hold";
+          timer = window.setTimeout(tick, holdMs);
+          return;
+        }
+        timer = window.setTimeout(tick, stepMs);
+        return;
+      }
+      if (phase === "hold") {
+        phase = "erase";
+        timer = window.setTimeout(tick, eraseMs);
+        return;
+      }
+      i -= 1;
+      setShown(text.slice(0, Math.max(0, i)));
+      if (i <= 0) {
+        phase = "type";
+        timer = window.setTimeout(tick, 420);
+        return;
+      }
+      timer = window.setTimeout(tick, eraseMs);
+    };
+
+    timer = window.setTimeout(tick, 280);
+    return () => window.clearTimeout(timer);
+  }, [text, durSec]);
+
+  return (
+    <h1 className={cn(className, "ub-name ub-name--typing")} style={style}>
+      <span>{shown}</span>
+      <span className="ub-name-caret" aria-hidden />
     </h1>
   );
 }

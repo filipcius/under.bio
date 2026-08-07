@@ -242,7 +242,35 @@ export function MiscEditor({
 
       <Section title="Motion & name">
         <Field label="Name animation" black={!isBlack}>
-          <SoftSelect value={config.page.titleAnimation} onChange={(titleAnimation) => set((c) => ({ ...c, page: { ...c.page, titleAnimation: titleAnimation as ProfileTemplate["page"]["titleAnimation"] } }))} onBlackLock={blackLock} options={markBlack([{ value: "none", label: "None" }, { value: "flashing", label: "Flashing" }, { value: "typing", label: "Typing" }, { value: "glitch", label: "Glitch" }, { value: "shine", label: "Shine" }, { value: "wave", label: "Wave" }, { value: "bounce", label: "Bounce" }, { value: "neon", label: "Neon" }, { value: "rainbow", label: "Rainbow" }, { value: "blur", label: "Blur pulse" }], ["none", "flashing", "shine"], isBlack)} />
+          <SoftSelect
+            value={config.page.titleAnimation}
+            onChange={(titleAnimation) =>
+              set((c) => ({
+                ...c,
+                page: {
+                  ...c.page,
+                  titleAnimation: titleAnimation as ProfileTemplate["page"]["titleAnimation"],
+                },
+              }))
+            }
+            onBlackLock={blackLock}
+            options={markBlack(
+              [
+                { value: "none", label: "None" },
+                { value: "shine", label: "Chrome shine" },
+                { value: "neon", label: "Neon glow" },
+                { value: "flashing", label: "Soft flash" },
+                { value: "glitch", label: "Glitch" },
+                { value: "typing", label: "Typewriter" },
+                { value: "wave", label: "Wave" },
+                { value: "bounce", label: "Bounce" },
+                { value: "rainbow", label: "Iridescent" },
+                { value: "blur", label: "Soft focus" },
+              ],
+              ["none", "flashing", "shine"],
+              isBlack,
+            )}
+          />
         </Field>
         <Field label="Name animation speed" hint={`${config.page.titleAnimationSpeed}`} black={!isBlack}>
           <Slider min={1} max={100} value={config.page.titleAnimationSpeed} onChange={(titleAnimationSpeed) => { if (!isBlack) return lock(); set((c) => ({ ...c, page: { ...c.page, titleAnimationSpeed } })); }} />
