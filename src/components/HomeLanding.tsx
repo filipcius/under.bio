@@ -130,9 +130,9 @@ export function HomeLanding() {
             <Icon name="discord" className="text-sm" glow={false} />
             Continue with Discord
           </Link>
-          <a href="#how" className="btn btn-ghost">
-            How it works
-          </a>
+          <Link href="/black" className="btn btn-ghost">
+            under VOID · $4.99
+          </Link>
         </motion.div>
 
         <motion.div
@@ -146,7 +146,7 @@ export function HomeLanding() {
           <span className="text-white/15">/</span>
           <span>1 page per account</span>
           <span className="text-white/15">/</span>
-          <span>AI JSON template</span>
+          <span>VOID style unlock</span>
         </motion.div>
       </section>
 

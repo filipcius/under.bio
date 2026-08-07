@@ -21,11 +21,17 @@ create table if not exists public.profiles (
   public_flags integer default 0,
   slug text not null unique,
   uid bigserial unique,
+  plan text not null default 'free',
+  stripe_customer_id text,
+  stripe_subscription_id text,
+  plan_status text not null default 'inactive',
+  plan_period_end timestamptz,
   discord_raw jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint profiles_slug_format check (slug ~ '^[a-z0-9]([a-z0-9_-]{1,23}[a-z0-9])?$'),
-  constraint profiles_slug_len check (char_length(slug) between 3 and 25)
+  constraint profiles_slug_len check (char_length(slug) between 3 and 25),
+  constraint profiles_plan_check check (plan in ('free', 'black'))
 );
 
 create table if not exists public.pages (

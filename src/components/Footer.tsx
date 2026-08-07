@@ -8,6 +8,9 @@ export function Footer() {
           under.bio <span className="font-normal text-white/30">- {new Date().getFullYear()}</span>
         </p>
         <div className="flex flex-wrap gap-4">
+          <Link href="/black" className="hover:text-white/70">
+            VOID
+          </Link>
           <Link href="/terms" className="hover:text-white/70">
             Terms
           </Link>

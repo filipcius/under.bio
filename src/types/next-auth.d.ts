@@ -8,6 +8,7 @@ declare module "next-auth" {
       profileId: string;
       slug: string;
       uid: number;
+      isBlack: boolean;
     } & DefaultSession["user"];
   }
 
@@ -16,6 +17,7 @@ declare module "next-auth" {
     profileId?: string;
     slug?: string;
     uid?: number;
+    isBlack?: boolean;
   }
 }
 
@@ -25,5 +27,7 @@ declare module "next-auth/jwt" {
     profileId?: string;
     slug?: string;
     uid?: number;
+    isBlack?: boolean;
+    syncedAt?: number;
   }
 }

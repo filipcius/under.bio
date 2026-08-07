@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import type { ProfileTemplate } from "@/lib/profile-template";
 import { saveProfileConfig } from "@/app/actions/profile";
 import { SaveBar } from "@/components/forms/SaveBar";
@@ -8,8 +9,17 @@ import { MediaUpload } from "@/components/forms/MediaUpload";
 import { SoftSelect } from "@/components/forms/SoftSelect";
 import { Icon } from "@/components/Icon";
 import { BADGE_PRESETS, SOCIAL_PLATFORMS } from "@/lib/socials";
+import { FREE_CAPS } from "@/lib/plan";
+import { BlackDiamond } from "@/components/BlackDiamond";
+import { BlackUpsellBanner } from "@/components/BlackUpsell";
 
-export function ExtrasEditor({ initial }: { initial: ProfileTemplate }) {
+export function ExtrasEditor({
+  initial,
+  isBlack = false,
+}: {
+  initial: ProfileTemplate;
+  isBlack?: boolean;
+}) {
   const [config, setConfig] = useState(initial);
   const [message, setMessage] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -20,11 +30,27 @@ export function ExtrasEditor({ initial }: { initial: ProfileTemplate }) {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [badgeTip, setBadgeTip] = useState("");
   const [editBadge, setEditBadge] = useState<string | null>(null);
+  const router = useRouter();
+  const lock = () => router.push("/black");
+
+  const linkCap = isBlack ? 40 : FREE_CAPS.links;
+  const badgeCap = isBlack ? 24 : FREE_CAPS.badges;
+  const tagCap = isBlack ? 20 : FREE_CAPS.tags;
+  const showcaseCap = isBlack ? 5 : FREE_CAPS.showcases;
 
   const selectedSocial = SOCIAL_PLATFORMS.find((s) => s.id === socialId) || SOCIAL_PLATFORMS[0];
 
   function addSocial() {
     if (!socialUrl.trim()) return;
+    if (config.links.length >= linkCap) {
+      setMessage(
+        isBlack
+          ? `Max ${linkCap} socials.`
+          : `Free plan: ${FREE_CAPS.links} socials. Unlock VOID for more.`,
+      );
+      if (!isBlack) lock();
+      return;
+    }
     setConfig((c) => ({
       ...c,
       links: [
@@ -34,7 +60,7 @@ export function ExtrasEditor({ initial }: { initial: ProfileTemplate }) {
           url: socialUrl.trim(),
           icon: selectedSocial.id,
         },
-      ].slice(0, 40),
+      ].slice(0, linkCap),
     }));
     setSocialUrl("");
     setMessage(`Added ${selectedSocial.label}.`);
@@ -42,7 +68,16 @@ export function ExtrasEditor({ initial }: { initial: ProfileTemplate }) {
 
   function addTag() {
     if (!tag.trim()) return;
-    setConfig((c) => ({ ...c, tags: [...c.tags, tag.trim()].slice(0, 20) }));
+    if (config.tags.length >= tagCap) {
+      setMessage(
+        isBlack
+          ? `Max ${tagCap} tags.`
+          : `Free plan: ${FREE_CAPS.tags} tags. Unlock BLACK for more.`,
+      );
+      if (!isBlack) lock();
+      return;
+    }
+    setConfig((c) => ({ ...c, tags: [...c.tags, tag.trim()].slice(0, tagCap) }));
     setTag("");
   }
 
@@ -52,18 +87,36 @@ export function ExtrasEditor({ initial }: { initial: ProfileTemplate }) {
       if (exists) {
         return { ...c, badges: c.badges.filter((b) => b.icon !== icon) };
       }
+      if (c.badges.length >= badgeCap) {
+        setMessage(
+          isBlack
+            ? `Max ${badgeCap} badges.`
+            : `Free plan: ${FREE_CAPS.badges} badges. Unlock VOID for more.`,
+        );
+        if (!isBlack) lock();
+        return c;
+      }
       return {
         ...c,
         badges: [
           ...c.badges,
           { name: label, icon, description: label },
-        ].slice(0, 24),
+        ].slice(0, badgeCap),
       };
     });
   }
 
   async function addDiscordServer() {
     if (!inviteInput.trim()) return;
+    if (!isBlack || config.showcases.length >= showcaseCap) {
+      setMessage(
+        isBlack
+          ? `Max ${showcaseCap} Discord cards.`
+          : "Discord live cards need under VOID.",
+      );
+      if (!isBlack) lock();
+      return;
+    }
     setInviteLoading(true);
     try {
       const res = await fetch(
@@ -106,10 +159,19 @@ export function ExtrasEditor({ initial }: { initial: ProfileTemplate }) {
         here is real data - no placeholders.
       </p>
 
+      {!isBlack && <BlackUpsellBanner />}
+
       <section>
         <h2 className="section-title mb-3 text-xl">Socials</h2>
         <p className="help mb-3">
-          Add as many platforms as you want - Instagram, TikTok, Steam, Spotify, GitHub, and more.
+          {isBlack
+            ? "Up to 40 platforms - Instagram, TikTok, Steam, Spotify, GitHub, and more."
+            : `Free: ${FREE_CAPS.links} socials. `}
+          {!isBlack && (
+            <span className="inline-flex items-center gap-1 text-sky-200/80">
+              <BlackDiamond /> VOID unlocks 40.
+            </span>
+          )}
         </p>
         <div className="mb-3 flex flex-wrap gap-2">
           {config.links.map((link, i) => (
@@ -263,9 +325,20 @@ export function ExtrasEditor({ initial }: { initial: ProfileTemplate }) {
       </section>
 
       <section>
-        <h2 className="section-title mb-3 text-xl">Discord servers</h2>
-        <p className="help mb-3">Live logo + online + members from a real invite link.</p>
-        <div className="space-y-2">
+        <h2 className="section-title mb-3 inline-flex items-center gap-2 text-xl">
+          Discord servers {!isBlack && <BlackDiamond />}
+        </h2>
+        <p className="help mb-3">
+          {isBlack
+            ? "Live logo + online + members from a real invite link."
+            : "Live Discord cards are a VOID feature."}
+        </p>
+        {!isBlack && (
+          <button type="button" className="btn btn-primary mb-3" onClick={lock}>
+            <BlackDiamond /> Unlock Discord cards
+          </button>
+        )}
+        <div className={`space-y-2 ${!isBlack ? "pointer-events-none opacity-40" : ""}`}>
           {config.showcases.map((item, i) => (
             <div
               key={`${item.inviteCode}-${i}`}

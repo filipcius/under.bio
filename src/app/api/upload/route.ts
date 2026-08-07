@@ -5,13 +5,13 @@ import { rateLimit } from "@/lib/security";
 
 const ALLOWED: Record<string, { mime: string[]; max: number; folder: string }> = {
   banner: {
-    mime: ["image/png", "image/jpeg", "image/webp", "image/gif"],
-    max: 8 * 1024 * 1024,
+    mime: ["image/png", "image/jpeg", "image/webp", "image/gif", "video/mp4"],
+    max: 20 * 1024 * 1024,
     folder: "banner",
   },
   background: {
     mime: ["image/png", "image/jpeg", "image/webp", "image/gif", "video/mp4"],
-    max: 25 * 1024 * 1024,
+    max: 40 * 1024 * 1024,
     folder: "background",
   },
   cover: {

@@ -13,6 +13,8 @@ import {
 import { slugify } from "@/lib/utils";
 import { getPageByProfileId } from "@/lib/data";
 import { isHttpUrl, rateLimit } from "@/lib/security";
+import { enforceFreePlanConfig } from "@/lib/plan";
+import { getPlanByProfileId } from "@/lib/subscription";
 
 const slugSchema = z
   .string()
@@ -30,12 +32,16 @@ const reserved = new Set([
   "extras",
   "account",
   "shop",
+  "black",
   "auth",
   "admin",
   "under",
   "underbio",
   "template",
   "templates",
+  "terms",
+  "privacy",
+  "faq",
 ]);
 
 export type ActionResult = { ok: true; message?: string } | { ok: false; error: string };
@@ -118,16 +124,21 @@ export async function saveProfileConfig(
   // Slug changes only via updateSlug (unique + reserved checks)
   validated.data.meta.slug = page.config.meta.slug;
 
+  const plan = await getPlanByProfileId(session.user.profileId);
+  const toSave = plan.isBlack
+    ? validated.data
+    : enforceFreePlanConfig(validated.data);
+
   const admin = createAdminClient();
   const { error } = await admin
     .from("pages")
-    .update({ config: validated.data })
+    .update({ config: toSave })
     .eq("id", page.id)
     .eq("profile_id", session.user.profileId);
 
   if (error) return { ok: false, error: "Save failed." };
 
-  const displayName = validated.data.meta.displayName;
+  const displayName = toSave.meta.displayName;
   await admin
     .from("profiles")
     .update({ global_name: displayName })
@@ -138,8 +149,13 @@ export async function saveProfileConfig(
   revalidatePath("/dashboard/options");
   revalidatePath("/dashboard/miscellaneous");
   revalidatePath("/dashboard/extras");
-  revalidatePath(`/${validated.data.meta.slug}`);
-  return { ok: true, message: "Saved." };
+  revalidatePath(`/${toSave.meta.slug}`);
+  return {
+    ok: true,
+    message: plan.isBlack
+      ? "Saved."
+      : "Saved. VOID-only style was kept within free limits.",
+  };
 }
 
 export async function importProfileJson(raw: string): Promise<ActionResult> {
@@ -182,7 +198,7 @@ export async function importProfileJson(raw: string): Promise<ActionResult> {
   }
 
   const scrub = (s: string) => s.replace(/[\u2014\u2013]/g, "-").replace(/ -- /g, " - ");
-  const next = {
+  let next = {
     ...parsed.data,
     meta: {
       ...parsed.data.meta,
@@ -201,6 +217,9 @@ export async function importProfileJson(raw: string): Promise<ActionResult> {
     tags: parsed.data.tags.map(scrub),
   };
 
+  const plan = await getPlanByProfileId(session.user.profileId);
+  if (!plan.isBlack) next = enforceFreePlanConfig(next);
+
   const admin = createAdminClient();
   const { error } = await admin
     .from("pages")
@@ -217,7 +236,12 @@ export async function importProfileJson(raw: string): Promise<ActionResult> {
 
   revalidatePath("/dashboard");
   revalidatePath(`/${lockedSlug}`);
-  return { ok: true, message: "JSON imported and applied." };
+  return {
+    ok: true,
+    message: plan.isBlack
+      ? "JSON imported and applied."
+      : "JSON imported with free-plan limits applied. Unlock VOID for full style.",
+  };
 }
 
 export async function resetProfileConfig(): Promise<ActionResult> {
@@ -263,4 +287,30 @@ export async function syncDiscord(): Promise<ActionResult> {
     ok: true,
     message: "Discord stats refresh on each login. Sign out and sign in to force sync.",
   };
+}
+
+/** Persist free-plan stripping so VOID-only knobs cannot linger after downgrade / pre-sub abuse */
+export async function ensureFreePlanCompliance(): Promise<ActionResult> {
+  const session = await requireSession();
+  const plan = await getPlanByProfileId(session.user.profileId);
+  if (plan.isBlack) return { ok: true };
+
+  const page = await getOwnedPage(session.user.profileId);
+  const cleaned = enforceFreePlanConfig(page.config);
+  const before = JSON.stringify(page.config);
+  const after = JSON.stringify(cleaned);
+  if (before === after) return { ok: true };
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("pages")
+    .update({ config: cleaned })
+    .eq("id", page.id)
+    .eq("profile_id", session.user.profileId);
+  if (error) return { ok: false, error: "Could not normalize free-plan config." };
+
+  revalidatePath("/dashboard/miscellaneous");
+  revalidatePath("/dashboard/extras");
+  revalidatePath(`/${cleaned.meta.slug}`);
+  return { ok: true, message: "Free-plan limits applied to your page." };
 }

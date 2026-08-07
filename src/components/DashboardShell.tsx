@@ -7,12 +7,14 @@ export function DashboardShell({
   slug,
   children,
   actions,
+  wide = false,
 }: {
   title: string;
   avatarUrl?: string | null;
   slug: string;
   children: React.ReactNode;
   actions?: React.ReactNode;
+  wide?: boolean;
 }) {
   const site = (process.env.NEXT_PUBLIC_SITE_URL || "under.bio").replace(
     /^https?:\/\//,
@@ -20,7 +22,7 @@ export function DashboardShell({
   );
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 animate-rise">
+    <div className={`mx-auto px-4 py-8 ${wide ? "max-w-7xl" : "max-w-4xl"}`}>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <Link href="/dashboard" className="btn btn-ghost text-sm">
           <Icon name="arrowLeft" className="text-xs" />

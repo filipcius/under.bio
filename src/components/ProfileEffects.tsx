@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import type { ProfileTemplate } from "@/lib/profile-template";
 import { hexToRgba } from "@/lib/utils";
 
@@ -14,6 +13,7 @@ function particleColor(
   return "#FFFFFF";
 }
 
+/** CSS-only particles — same look, far cheaper than dozens of Framer nodes */
 export function ProfileParticles({
   mode,
   density,
@@ -28,84 +28,83 @@ export function ProfileParticles({
   theme: string;
 }) {
   if (mode === "none") return null;
-  const count = Math.round((density / 100) * (mode === "matrix" ? 40 : 36));
-  const durBase = 9 - speed / 20;
+  const count = Math.min(
+    Math.round((density / 100) * (mode === "matrix" ? 28 : 24)),
+    32,
+  );
+  const durBase = Math.max(3.5, 9 - speed / 20);
   const color = particleColor(colorMode, theme);
 
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+    <div
+      className="pointer-events-none absolute inset-0 overflow-hidden"
+      aria-hidden
+      style={{ ["--ub-p-color" as string]: color }}
+    >
       {Array.from({ length: count }).map((_, i) => {
         const left = `${(i * 47 + 13) % 100}%`;
+        const delay = `${(i * 0.17).toFixed(2)}s`;
+        const duration = `${(durBase + (i % 5) * 0.55).toFixed(2)}s`;
         if (mode === "matrix") {
           return (
-            <motion.span
+            <span
               key={i}
-              className="absolute font-mono text-[10px] opacity-40"
-              style={{ left, top: "-10%", color }}
-              animate={{ y: ["0vh", "120vh"], opacity: [0, 0.7, 0] }}
-              transition={{
-                duration: durBase + (i % 5),
-                repeat: Infinity,
-                delay: i * 0.15,
-                ease: "linear",
+              className="ub-particle ub-particle-matrix absolute font-mono text-[10px] opacity-40"
+              style={{
+                left,
+                top: "-12%",
+                color,
+                animationDuration: duration,
+                animationDelay: delay,
               }}
             >
               {String.fromCharCode(0x30a0 + ((i * 7) % 90))}
-            </motion.span>
+            </span>
           );
         }
         if (mode === "rain") {
           return (
-            <motion.span
+            <span
               key={i}
-              className="absolute w-px rounded-full"
+              className="ub-particle ub-particle-fall absolute w-px rounded-full"
               style={{
                 left,
-                top: "-10%",
+                top: "-12%",
                 height: 10 + (i % 5) * 4,
                 background: color,
                 opacity: 0.35,
-              }}
-              animate={{ y: ["0vh", "120vh"] }}
-              transition={{
-                duration: durBase * 0.45 + (i % 3) * 0.2,
-                repeat: Infinity,
-                delay: i * 0.08,
-                ease: "linear",
+                animationDuration: `${(durBase * 0.45 + (i % 3) * 0.2).toFixed(2)}s`,
+                animationDelay: delay,
               }}
             />
           );
         }
         if (mode === "stars" || mode === "sparkle") {
           return (
-            <motion.span
+            <span
               key={i}
-              className="absolute rounded-full"
+              className="ub-particle ub-particle-twinkle absolute rounded-full"
               style={{
                 left,
                 top: `${(i * 29) % 100}%`,
                 width: mode === "sparkle" ? 2 : 1.5,
                 height: mode === "sparkle" ? 2 : 1.5,
                 background: color,
-              }}
-              animate={{ opacity: [0.15, 1, 0.15], scale: [0.8, 1.4, 0.8] }}
-              transition={{
-                duration: 1.8 + (i % 4) * 0.4,
-                repeat: Infinity,
-                delay: i * 0.12,
+                animationDuration: `${(1.8 + (i % 4) * 0.4).toFixed(2)}s`,
+                animationDelay: delay,
               }}
             />
           );
         }
         return (
-          <motion.span
+          <span
             key={i}
-            className="absolute rounded-full"
+            className="ub-particle ub-particle-fall absolute rounded-full"
             style={{
-              width: mode === "snow" ? 3 + (i % 3) : mode === "ash" ? 2 : 2,
+              width: mode === "snow" ? 3 + (i % 3) : 2,
               height: mode === "snow" ? 3 + (i % 3) : 2,
               left,
-              top: "-10%",
+              top: "-12%",
               background:
                 mode === "embers" || mode === "ash"
                   ? colorMode === "white"
@@ -113,13 +112,9 @@ export function ProfileParticles({
                     : color
                   : color,
               opacity: 0.55,
-            }}
-            animate={{ y: ["0vh", "110vh"], opacity: [0, 1, 0], x: mode === "ash" ? [0, 20, -10] : 0 }}
-            transition={{
-              duration: durBase + (i % 5),
-              repeat: Infinity,
-              delay: i * 0.18,
-              ease: "linear",
+              animationDuration: duration,
+              animationDelay: delay,
+              ["--ub-drift" as string]: mode === "ash" ? "14px" : "0px",
             }}
           />
         );
@@ -142,29 +137,23 @@ export function ProfileAurora({
   const strong = mode === "strong" || mode === "pulse";
   return (
     <>
-      <motion.div
-        className="pointer-events-none absolute -left-24 top-1/4 rounded-full blur-3xl"
+      <div
+        className={`pointer-events-none absolute -left-24 top-1/4 rounded-full blur-3xl ${
+          mode === "pulse" ? "ub-aurora-pulse" : "ub-aurora-drift"
+        }`}
         style={{
           width: strong ? 340 : 260,
           height: strong ? 340 : 260,
           background: hexToRgba(theme, Math.round(22 * op)),
         }}
-        animate={
-          mode === "pulse"
-            ? { opacity: [0.3, 0.7, 0.3], scale: [1, 1.08, 1] }
-            : { x: [0, 40, 0], y: [0, -30, 0], opacity: [0.35, 0.55, 0.35] }
-        }
-        transition={{ duration: mode === "pulse" ? 4 : 10, repeat: Infinity, ease: "easeInOut" }}
       />
-      <motion.div
-        className="pointer-events-none absolute -right-16 bottom-1/4 rounded-full blur-3xl"
+      <div
+        className="ub-aurora-drift-alt pointer-events-none absolute -right-16 bottom-1/4 rounded-full blur-3xl"
         style={{
           width: strong ? 360 : 280,
           height: strong ? 360 : 280,
           background: hexToRgba(theme, Math.round(14 * op)),
         }}
-        animate={{ x: [0, -35, 0], y: [0, 25, 0], opacity: [0.25, 0.45, 0.25] }}
-        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
       />
     </>
   );
@@ -182,29 +171,21 @@ export function ProfileOrbs({
   theme: string;
 }) {
   if (!enabled) return null;
+  const n = Math.min(count, 8);
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden">
-      {Array.from({ length: count }).map((_, i) => (
-        <motion.div
+    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+      {Array.from({ length: n }).map((_, i) => (
+        <div
           key={i}
-          className="absolute rounded-full blur-2xl"
+          className="ub-orb absolute rounded-full blur-2xl"
           style={{
             width: 80 + (i % 4) * 30,
             height: 80 + (i % 4) * 30,
             left: `${(i * 17) % 80}%`,
             top: `${(i * 23) % 70}%`,
             background: hexToRgba(theme, Math.round((intensity / 100) * 18)),
-          }}
-          animate={{
-            x: [0, 30, -20, 0],
-            y: [0, -25, 15, 0],
-            opacity: [0.3, 0.6, 0.3],
-          }}
-          transition={{
-            duration: 8 + i,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: i * 0.4,
+            animationDuration: `${8 + i}s`,
+            animationDelay: `${i * 0.4}s`,
           }}
         />
       ))}

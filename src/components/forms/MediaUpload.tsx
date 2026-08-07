@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Icon } from "@/components/Icon";
+import { isVideoUrl } from "@/lib/utils";
 
 export function MediaUpload({
   label,
@@ -21,6 +22,7 @@ export function MediaUpload({
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const video = isVideoUrl(value);
 
   async function onFile(file: File | null) {
     if (!file) return;
@@ -51,12 +53,22 @@ export function MediaUpload({
         {hint && <span className="help">{hint}</span>}
       </div>
 
-      {value && kind !== "audio" && (
+      {value && kind !== "audio" && !video && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={value}
           alt=""
-          className="mb-2 h-24 w-full rounded-xl object-cover border border-white/10"
+          className="mb-2 h-24 w-full rounded-xl border border-white/10 object-cover"
+        />
+      )}
+      {value && kind !== "audio" && video && (
+        <video
+          src={value}
+          className="mb-2 h-24 w-full rounded-xl border border-white/10 object-cover"
+          muted
+          playsInline
+          loop
+          autoPlay
         />
       )}
       {value && kind === "audio" && (

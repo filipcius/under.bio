@@ -5,6 +5,27 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Icon } from "@/components/Icon";
 
+function loginErrorMessage(error?: string) {
+  switch (error) {
+    case "not_in_server":
+      return "You must be a member of the under.bio Discord server to sign in.";
+    case "auth_failed":
+      return "Sign-in failed. Try again or contact support.";
+    case "OAuthCallback":
+    case "Callback":
+    case "OAuthSignin":
+      return "Discord login was interrupted. Clear site cookies for under.bio and try once more.";
+    case "Configuration":
+      return "Login is misconfigured. Try again in a minute.";
+    case "AccessDenied":
+      return "Access denied. Join the required Discord server, then try again.";
+    case "Verification":
+      return "Login link expired. Start sign-in again.";
+    default:
+      return error ? "Could not complete Discord login. Please try again." : null;
+  }
+}
+
 export default async function LoginPage({
   searchParams,
 }: {
@@ -18,14 +39,8 @@ export default async function LoginPage({
     // env not configured yet
   }
 
-  const errorMessage =
-    params.error === "not_in_server"
-      ? "You must be a member of the under.bio Discord server to sign in."
-      : params.error === "auth_failed"
-        ? "Sign-in failed. Try again or contact support."
-        : params.error
-          ? "Could not complete Discord login."
-          : null;
+  const errorMessage = loginErrorMessage(params.error);
+  const next = params.next && params.next.startsWith("/") ? params.next : "/dashboard";
 
   return (
     <>
@@ -48,7 +63,7 @@ export default async function LoginPage({
             className="mt-6"
             action={async () => {
               "use server";
-              await signIn("discord", { redirectTo: params.next || "/dashboard" });
+              await signIn("discord", { redirectTo: next });
             }}
           >
             <button type="submit" className="btn btn-discord">

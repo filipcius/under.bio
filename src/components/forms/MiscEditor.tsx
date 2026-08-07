@@ -1,31 +1,48 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import type { ProfileTemplate } from "@/lib/profile-template";
 import { saveProfileConfig } from "@/app/actions/profile";
 import { SaveBar } from "@/components/forms/SaveBar";
 import { Slider } from "@/components/forms/Slider";
 import { MediaUpload } from "@/components/forms/MediaUpload";
-import { SoftOnOff, SoftSelect } from "@/components/forms/SoftSelect";
+import { SoftOnOff, SoftSelect, type SoftOption } from "@/components/forms/SoftSelect";
 import { Icon } from "@/components/Icon";
+import { BlackDiamond } from "@/components/BlackDiamond";
+import { BlackUpsellBanner } from "@/components/BlackUpsell";
+import { StyleLivePreview } from "@/components/StyleLivePreview";
+import { enforceFreePlanConfig } from "@/lib/plan";
 
 function Field({
   label,
   hint,
+  black,
   children,
 }: {
   label: string;
   hint?: string;
+  black?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <div>
       <div className="label">
-        <span>{label}</span>
+        <span className="inline-flex items-center gap-1.5">
+          {black && <BlackDiamond />}
+          {label}
+        </span>
         {hint && <span className="help">{hint}</span>}
       </div>
       {children}
     </div>
+  );
+}
+
+function markBlack(options: SoftOption[], freeValues: string[], isBlack: boolean): SoftOption[] {
+  if (isBlack) return options;
+  return options.map((o) =>
+    freeValues.includes(o.value) ? o : { ...o, black: true },
   );
 }
 
@@ -80,40 +97,70 @@ function ColorField({
   );
 }
 
-export function MiscEditor({ initial }: { initial: ProfileTemplate }) {
-  const [config, setConfig] = useState(initial);
+export function MiscEditor({
+  initial,
+  isBlack = false,
+  avatarUrl,
+  uid,
+  discordUsername,
+}: {
+  initial: ProfileTemplate;
+  isBlack?: boolean;
+  avatarUrl?: string | null;
+  uid: number;
+  discordUsername: string;
+}) {
+  const boot = useMemo(
+    () => (isBlack ? initial : enforceFreePlanConfig(initial)),
+    [initial, isBlack],
+  );
+  const [config, setConfig] = useState(boot);
+  const [baseline, setBaseline] = useState(() => JSON.stringify(boot));
   const [message, setMessage] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const set = setConfig as SetConfig;
+  const router = useRouter();
+  const lock = () => router.push("/black");
+  const blackLock = isBlack ? undefined : lock;
+  const dirty = JSON.stringify(config) !== baseline;
 
   return (
-    <div className="space-y-4">
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="space-y-4">
       <p className="help">
         Full style lab - media, motion, effects, typography, panels, audio. Experiment hard, then
-        Save.
+        Save. Live preview sticks on the right while you tweak.
       </p>
+
+      {!isBlack && <BlackUpsellBanner />}
 
       <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/70">
         <Icon name="info" className="mr-2 text-xs" />
-        {Object.keys(config.appearance).length + Object.keys(config.effects).length}+ knobs live
-        here. Collapse sections you are not using.
+        {isBlack ? (
+          <>VOID unlocked - every knob below is yours. Banner & background accept MP4 too.</>
+        ) : (
+          <>
+            Free plan keeps the clean basics. Options with <BlackDiamond className="mx-0.5 inline" />{" "}
+            need under VOID. Paid-only settings are stripped if they lingered from before.
+          </>
+        )}
       </div>
 
       <Section title="Media">
         <div className="sm:col-span-2 grid gap-5 sm:grid-cols-2">
           <MediaUpload
-            label="Banner image"
-            hint="png/jpg/webp/gif · max 8MB"
+            label="Banner"
+            hint="png/jpg/webp/gif/mp4 · max 20MB"
             kind="banner"
-            accept="image/png,image/jpeg,image/webp,image/gif"
+            accept="image/png,image/jpeg,image/webp,image/gif,video/mp4"
             value={config.banner.url}
             onChange={(url) => set((c) => ({ ...c, banner: { ...c.banner, url } }))}
           />
           <MediaUpload
-            label="Background image"
-            hint="png/jpg/webp/gif · max 25MB"
+            label="Background"
+            hint="png/jpg/webp/gif/mp4 · max 40MB"
             kind="background"
-            accept="image/png,image/jpeg,image/webp,image/gif"
+            accept="image/png,image/jpeg,image/webp,image/gif,video/mp4"
             value={config.background.url}
             onChange={(url) => set((c) => ({ ...c, background: { ...c.background, url } }))}
           />
@@ -161,12 +208,12 @@ export function MiscEditor({ initial }: { initial: ProfileTemplate }) {
         <Field label="Background position">
           <SoftSelect value={config.background.position} onChange={(position) => set((c) => ({ ...c, background: { ...c.background, position: position as ProfileTemplate["background"]["position"] } }))} options={[{ value: "center", label: "Center" }, { value: "top", label: "Top" }, { value: "bottom", label: "Bottom" }]} />
         </Field>
-        <Field label="Background gradient">
-          <SoftSelect value={config.background.gradient} onChange={(gradient) => set((c) => ({ ...c, background: { ...c.background, gradient: gradient as ProfileTemplate["background"]["gradient"] } }))} options={[{ value: "none", label: "None" }, { value: "radial", label: "Radial" }, { value: "linear", label: "Linear" }, { value: "mesh", label: "Mesh" }]} />
+        <Field label="Background gradient" black={!isBlack}>
+          <SoftSelect value={config.background.gradient} onChange={(gradient) => set((c) => ({ ...c, background: { ...c.background, gradient: gradient as ProfileTemplate["background"]["gradient"] } }))} onBlackLock={blackLock} options={markBlack([{ value: "none", label: "None" }, { value: "radial", label: "Radial" }, { value: "linear", label: "Linear" }, { value: "mesh", label: "Mesh" }], ["none", "radial", "linear"], isBlack)} />
         </Field>
         <ColorField label="Gradient color" value={config.background.gradientColor} onChange={(gradientColor) => set((c) => ({ ...c, background: { ...c.background, gradientColor } }))} />
-        <Field label="Animated gradient">
-          <SoftOnOff value={config.background.animatedGradient} onChange={(animatedGradient) => set((c) => ({ ...c, background: { ...c.background, animatedGradient } }))} />
+        <Field label="Animated gradient" black={!isBlack}>
+          <SoftOnOff value={config.background.animatedGradient} onChange={(animatedGradient) => set((c) => ({ ...c, background: { ...c.background, animatedGradient } }))} blackLocked={!isBlack} onBlackLock={blackLock} />
         </Field>
       </Section>
 
@@ -201,130 +248,135 @@ export function MiscEditor({ initial }: { initial: ProfileTemplate }) {
       </Section>
 
       <Section title="Motion & name">
-        <Field label="Name animation">
-          <SoftSelect value={config.page.titleAnimation} onChange={(titleAnimation) => set((c) => ({ ...c, page: { ...c.page, titleAnimation: titleAnimation as ProfileTemplate["page"]["titleAnimation"] } }))} options={[{ value: "none", label: "None" }, { value: "flashing", label: "Flashing" }, { value: "typing", label: "Typing" }, { value: "glitch", label: "Glitch" }, { value: "shine", label: "Shine" }, { value: "wave", label: "Wave" }, { value: "bounce", label: "Bounce" }, { value: "neon", label: "Neon" }, { value: "rainbow", label: "Rainbow" }, { value: "blur", label: "Blur pulse" }]} />
+        <Field label="Name animation" black={!isBlack}>
+          <SoftSelect value={config.page.titleAnimation} onChange={(titleAnimation) => set((c) => ({ ...c, page: { ...c.page, titleAnimation: titleAnimation as ProfileTemplate["page"]["titleAnimation"] } }))} onBlackLock={blackLock} options={markBlack([{ value: "none", label: "None" }, { value: "flashing", label: "Flashing" }, { value: "typing", label: "Typing" }, { value: "glitch", label: "Glitch" }, { value: "shine", label: "Shine" }, { value: "wave", label: "Wave" }, { value: "bounce", label: "Bounce" }, { value: "neon", label: "Neon" }, { value: "rainbow", label: "Rainbow" }, { value: "blur", label: "Blur pulse" }], ["none", "flashing", "shine"], isBlack)} />
         </Field>
-        <Field label="Name animation speed" hint={`${config.page.titleAnimationSpeed}`}>
-          <Slider min={1} max={100} value={config.page.titleAnimationSpeed} onChange={(titleAnimationSpeed) => set((c) => ({ ...c, page: { ...c.page, titleAnimationSpeed } }))} />
+        <Field label="Name animation speed" hint={`${config.page.titleAnimationSpeed}`} black={!isBlack}>
+          <Slider min={1} max={100} value={config.page.titleAnimationSpeed} onChange={(titleAnimationSpeed) => { if (!isBlack) return lock(); set((c) => ({ ...c, page: { ...c.page, titleAnimationSpeed } })); }} />
         </Field>
-        <Field label="Enter animation">
-          <SoftSelect value={config.page.enterAnimation} onChange={(enterAnimation) => set((c) => ({ ...c, page: { ...c.page, enterAnimation: enterAnimation as ProfileTemplate["page"]["enterAnimation"] } }))} options={[{ value: "none", label: "None" }, { value: "fade", label: "Fade" }, { value: "slide-up", label: "Slide up" }, { value: "zoom", label: "Zoom" }, { value: "blur-in", label: "Blur in" }, { value: "bounce", label: "Bounce" }, { value: "flip", label: "Flip" }]} />
+        <Field label="Enter animation" black={!isBlack}>
+          <SoftSelect value={config.page.enterAnimation} onChange={(enterAnimation) => set((c) => ({ ...c, page: { ...c.page, enterAnimation: enterAnimation as ProfileTemplate["page"]["enterAnimation"] } }))} onBlackLock={blackLock} options={markBlack([{ value: "none", label: "None" }, { value: "fade", label: "Fade" }, { value: "slide-up", label: "Slide up" }, { value: "zoom", label: "Zoom" }, { value: "blur-in", label: "Blur in" }, { value: "bounce", label: "Bounce" }, { value: "flip", label: "Flip" }], ["none", "fade", "slide-up"], isBlack)} />
         </Field>
         <Field label="Enter speed" hint={`${config.page.enterAnimationSpeed}`}>
           <Slider min={1} max={100} value={config.page.enterAnimationSpeed} onChange={(enterAnimationSpeed) => set((c) => ({ ...c, page: { ...c.page, enterAnimationSpeed } }))} />
         </Field>
-        <Field label="Particles">
-          <SoftSelect value={config.page.particles} onChange={(particles) => set((c) => ({ ...c, page: { ...c.page, particles: particles as ProfileTemplate["page"]["particles"] } }))} options={[{ value: "none", label: "None" }, { value: "dust", label: "Dust" }, { value: "snow", label: "Snow" }, { value: "embers", label: "Embers" }, { value: "rain", label: "Rain" }, { value: "stars", label: "Stars" }, { value: "sparkle", label: "Sparkle" }, { value: "matrix", label: "Matrix" }, { value: "ash", label: "Ash" }]} />
+        <Field label="Particles" black={!isBlack}>
+          <SoftSelect value={config.page.particles} onChange={(particles) => set((c) => ({ ...c, page: { ...c.page, particles: particles as ProfileTemplate["page"]["particles"] } }))} onBlackLock={blackLock} options={markBlack([{ value: "none", label: "None" }, { value: "dust", label: "Dust" }, { value: "snow", label: "Snow" }, { value: "embers", label: "Embers" }, { value: "rain", label: "Rain" }, { value: "stars", label: "Stars" }, { value: "sparkle", label: "Sparkle" }, { value: "matrix", label: "Matrix" }, { value: "ash", label: "Ash" }], ["none"], isBlack)} />
         </Field>
-        <Field label="Particle density" hint={`${config.page.particleDensity}`}>
-          <Slider min={10} max={100} value={config.page.particleDensity} onChange={(particleDensity) => set((c) => ({ ...c, page: { ...c.page, particleDensity } }))} />
+        <Field label="Particle density" hint={`${config.page.particleDensity}`} black={!isBlack}>
+          <Slider min={10} max={100} value={config.page.particleDensity} onChange={(particleDensity) => { if (!isBlack) return lock(); set((c) => ({ ...c, page: { ...c.page, particleDensity } })); }} />
         </Field>
-        <Field label="Particle speed" hint={`${config.page.particleSpeed}`}>
-          <Slider min={10} max={100} value={config.page.particleSpeed} onChange={(particleSpeed) => set((c) => ({ ...c, page: { ...c.page, particleSpeed } }))} />
+        <Field label="Particle speed" hint={`${config.page.particleSpeed}`} black={!isBlack}>
+          <Slider min={10} max={100} value={config.page.particleSpeed} onChange={(particleSpeed) => { if (!isBlack) return lock(); set((c) => ({ ...c, page: { ...c.page, particleSpeed } })); }} />
         </Field>
-        <Field label="Particle color">
-          <SoftSelect value={config.page.particleColor} onChange={(particleColor) => set((c) => ({ ...c, page: { ...c.page, particleColor: particleColor as ProfileTemplate["page"]["particleColor"] } }))} options={[{ value: "white", label: "White" }, { value: "theme", label: "Theme" }, { value: "warm", label: "Warm" }, { value: "cool", label: "Cool" }]} />
+        <Field label="Particle color" black={!isBlack}>
+          <SoftSelect value={config.page.particleColor} onChange={(particleColor) => set((c) => ({ ...c, page: { ...c.page, particleColor: particleColor as ProfileTemplate["page"]["particleColor"] } }))} onBlackLock={blackLock} options={markBlack([{ value: "white", label: "White" }, { value: "theme", label: "Theme" }, { value: "warm", label: "Warm" }, { value: "cool", label: "Cool" }], ["white"], isBlack)} />
         </Field>
-        <Field label="Overlay">
-          <SoftSelect value={config.page.overlay} onChange={(overlay) => set((c) => ({ ...c, page: { ...c.page, overlay: overlay as ProfileTemplate["page"]["overlay"] } }))} options={[{ value: "none", label: "None" }, { value: "vignette", label: "Vignette" }, { value: "scanlines", label: "Scanlines" }, { value: "noise", label: "Noise" }, { value: "grid", label: "Grid" }, { value: "crt", label: "CRT" }, { value: "fog", label: "Fog" }, { value: "chromatic", label: "Chromatic" }, { value: "stars", label: "Stars fog" }]} />
+        <Field label="Overlay" black={!isBlack}>
+          <SoftSelect value={config.page.overlay} onChange={(overlay) => set((c) => ({ ...c, page: { ...c.page, overlay: overlay as ProfileTemplate["page"]["overlay"] } }))} onBlackLock={blackLock} options={markBlack([{ value: "none", label: "None" }, { value: "vignette", label: "Vignette" }, { value: "scanlines", label: "Scanlines" }, { value: "noise", label: "Noise" }, { value: "grid", label: "Grid" }, { value: "crt", label: "CRT" }, { value: "fog", label: "Fog" }, { value: "chromatic", label: "Chromatic" }, { value: "stars", label: "Stars fog" }], ["none", "vignette"], isBlack)} />
         </Field>
         <Field label="Overlay opacity" hint={`${config.page.overlayOpacity}%`}>
           <Slider min={0} max={100} value={config.page.overlayOpacity} onChange={(overlayOpacity) => set((c) => ({ ...c, page: { ...c.page, overlayOpacity } }))} />
         </Field>
-        <Field label="Reveal style">
-          <SoftSelect value={config.page.revealStyle} onChange={(revealStyle) => set((c) => ({ ...c, page: { ...c.page, revealStyle: revealStyle as ProfileTemplate["page"]["revealStyle"] } }))} options={[{ value: "fade", label: "Fade" }, { value: "blur", label: "Blur" }, { value: "zoom", label: "Zoom" }, { value: "glitch", label: "Glitch" }]} />
+        <Field label="Reveal style" black={!isBlack}>
+          <SoftSelect value={config.page.revealStyle} onChange={(revealStyle) => set((c) => ({ ...c, page: { ...c.page, revealStyle: revealStyle as ProfileTemplate["page"]["revealStyle"] } }))} onBlackLock={blackLock} options={markBlack([{ value: "fade", label: "Fade" }, { value: "blur", label: "Blur" }, { value: "zoom", label: "Zoom" }, { value: "glitch", label: "Glitch" }], ["fade"], isBlack)} />
         </Field>
         <Field label="Reveal text">
           <input className="soft-input" value={config.page.revealText} onChange={(e) => set((c) => ({ ...c, page: { ...c.page, revealText: e.target.value } }))} />
         </Field>
-        <Field label="Avatar animation">
-          <SoftSelect value={config.appearance.avatarDecoration} onChange={(avatarDecoration) => set((c) => ({ ...c, appearance: { ...c.appearance, avatarDecoration: avatarDecoration as ProfileTemplate["appearance"]["avatarDecoration"] } }))} options={[{ value: "none", label: "None" }, { value: "glow", label: "Glow float" }, { value: "pulse", label: "Pulse" }, { value: "ring", label: "Ring sway" }, { value: "spin-ring", label: "Spin ring" }, { value: "hex", label: "Hex" }, { value: "square-glow", label: "Square glow" }]} />
+        <Field label="Avatar animation" black={!isBlack}>
+          <SoftSelect value={config.appearance.avatarDecoration} onChange={(avatarDecoration) => set((c) => ({ ...c, appearance: { ...c.appearance, avatarDecoration: avatarDecoration as ProfileTemplate["appearance"]["avatarDecoration"] } }))} onBlackLock={blackLock} options={markBlack([{ value: "none", label: "None" }, { value: "glow", label: "Glow float" }, { value: "pulse", label: "Pulse" }, { value: "ring", label: "Ring sway" }, { value: "spin-ring", label: "Spin ring" }, { value: "hex", label: "Hex" }, { value: "square-glow", label: "Square glow" }], ["none", "glow", "pulse", "ring", "square-glow"], isBlack)} />
         </Field>
       </Section>
 
       <Section title="Effects lab" defaultOpen>
-        <Field label="Aurora">
-          <SoftSelect value={config.effects.aurora} onChange={(aurora) => set((c) => ({ ...c, effects: { ...c.effects, aurora: aurora as ProfileTemplate["effects"]["aurora"] } }))} options={[{ value: "none", label: "Off" }, { value: "soft", label: "Soft" }, { value: "strong", label: "Strong" }, { value: "pulse", label: "Pulse" }]} />
+        {!isBlack && (
+          <div className="sm:col-span-2">
+            <BlackUpsellBanner compact />
+          </div>
+        )}
+        <Field label="Aurora" black={!isBlack}>
+          <SoftSelect value={config.effects.aurora} onChange={(aurora) => set((c) => ({ ...c, effects: { ...c.effects, aurora: aurora as ProfileTemplate["effects"]["aurora"] } }))} onBlackLock={blackLock} options={markBlack([{ value: "none", label: "Off" }, { value: "soft", label: "Soft" }, { value: "strong", label: "Strong" }, { value: "pulse", label: "Pulse" }], ["none"], isBlack)} />
         </Field>
-        <Field label="Aurora intensity" hint={`${config.effects.auroraIntensity}`}>
-          <Slider min={0} max={100} value={config.effects.auroraIntensity} onChange={(auroraIntensity) => set((c) => ({ ...c, effects: { ...c.effects, auroraIntensity } }))} />
+        <Field label="Aurora intensity" hint={`${config.effects.auroraIntensity}`} black={!isBlack}>
+          <Slider min={0} max={100} value={config.effects.auroraIntensity} onChange={(auroraIntensity) => { if (!isBlack) return lock(); set((c) => ({ ...c, effects: { ...c.effects, auroraIntensity } })); }} />
         </Field>
-        <Field label="Floating orbs">
-          <SoftOnOff value={config.effects.floatingOrbs} onChange={(floatingOrbs) => set((c) => ({ ...c, effects: { ...c.effects, floatingOrbs } }))} />
+        <Field label="Floating orbs" black={!isBlack}>
+          <SoftOnOff value={config.effects.floatingOrbs} onChange={(floatingOrbs) => set((c) => ({ ...c, effects: { ...c.effects, floatingOrbs } }))} blackLocked={!isBlack} onBlackLock={blackLock} />
         </Field>
-        <Field label="Orb count" hint={`${config.effects.orbCount}`}>
-          <Slider min={2} max={12} value={config.effects.orbCount} onChange={(orbCount) => set((c) => ({ ...c, effects: { ...c.effects, orbCount } }))} />
+        <Field label="Orb count" hint={`${config.effects.orbCount}`} black={!isBlack}>
+          <Slider min={2} max={12} value={config.effects.orbCount} onChange={(orbCount) => { if (!isBlack) return lock(); set((c) => ({ ...c, effects: { ...c.effects, orbCount } })); }} />
         </Field>
-        <Field label="Orb intensity" hint={`${config.effects.orbIntensity}`}>
-          <Slider min={0} max={100} value={config.effects.orbIntensity} onChange={(orbIntensity) => set((c) => ({ ...c, effects: { ...c.effects, orbIntensity } }))} />
+        <Field label="Orb intensity" hint={`${config.effects.orbIntensity}`} black={!isBlack}>
+          <Slider min={0} max={100} value={config.effects.orbIntensity} onChange={(orbIntensity) => { if (!isBlack) return lock(); set((c) => ({ ...c, effects: { ...c.effects, orbIntensity } })); }} />
         </Field>
-        <Field label="Ambient pulse">
-          <SoftOnOff value={config.effects.ambientPulse} onChange={(ambientPulse) => set((c) => ({ ...c, effects: { ...c.effects, ambientPulse } }))} />
+        <Field label="Ambient pulse" black={!isBlack}>
+          <SoftOnOff value={config.effects.ambientPulse} onChange={(ambientPulse) => set((c) => ({ ...c, effects: { ...c.effects, ambientPulse } }))} blackLocked={!isBlack} onBlackLock={blackLock} />
         </Field>
-        <Field label="RGB split">
-          <SoftOnOff value={config.effects.rgbSplit} onChange={(rgbSplit) => set((c) => ({ ...c, effects: { ...c.effects, rgbSplit } }))} />
+        <Field label="RGB split" black={!isBlack}>
+          <SoftOnOff value={config.effects.rgbSplit} onChange={(rgbSplit) => set((c) => ({ ...c, effects: { ...c.effects, rgbSplit } }))} blackLocked={!isBlack} onBlackLock={blackLock} />
         </Field>
-        <Field label="RGB intensity" hint={`${config.effects.rgbIntensity}`}>
-          <Slider min={0} max={20} value={config.effects.rgbIntensity} onChange={(rgbIntensity) => set((c) => ({ ...c, effects: { ...c.effects, rgbIntensity } }))} />
+        <Field label="RGB intensity" hint={`${config.effects.rgbIntensity}`} black={!isBlack}>
+          <Slider min={0} max={20} value={config.effects.rgbIntensity} onChange={(rgbIntensity) => { if (!isBlack) return lock(); set((c) => ({ ...c, effects: { ...c.effects, rgbIntensity } })); }} />
         </Field>
-        <Field label="Bloom">
-          <SoftOnOff value={config.effects.bloom} onChange={(bloom) => set((c) => ({ ...c, effects: { ...c.effects, bloom } }))} />
+        <Field label="Bloom" black={!isBlack}>
+          <SoftOnOff value={config.effects.bloom} onChange={(bloom) => set((c) => ({ ...c, effects: { ...c.effects, bloom } }))} blackLocked={!isBlack} onBlackLock={blackLock} />
         </Field>
-        <Field label="Bloom intensity" hint={`${config.effects.bloomIntensity}`}>
-          <Slider min={0} max={100} value={config.effects.bloomIntensity} onChange={(bloomIntensity) => set((c) => ({ ...c, effects: { ...c.effects, bloomIntensity } }))} />
+        <Field label="Bloom intensity" hint={`${config.effects.bloomIntensity}`} black={!isBlack}>
+          <Slider min={0} max={100} value={config.effects.bloomIntensity} onChange={(bloomIntensity) => { if (!isBlack) return lock(); set((c) => ({ ...c, effects: { ...c.effects, bloomIntensity } })); }} />
         </Field>
-        <Field label="Film bars (cinematic)">
-          <SoftOnOff value={config.effects.filmBars} onChange={(filmBars) => set((c) => ({ ...c, effects: { ...c.effects, filmBars } }))} />
+        <Field label="Film bars (cinematic)" black={!isBlack}>
+          <SoftOnOff value={config.effects.filmBars} onChange={(filmBars) => set((c) => ({ ...c, effects: { ...c.effects, filmBars } }))} blackLocked={!isBlack} onBlackLock={blackLock} />
         </Field>
-        <Field label="Film bar size" hint={`${config.effects.filmBarSize}px`}>
-          <Slider min={4} max={80} value={config.effects.filmBarSize} onChange={(filmBarSize) => set((c) => ({ ...c, effects: { ...c.effects, filmBarSize } }))} />
+        <Field label="Film bar size" hint={`${config.effects.filmBarSize}px`} black={!isBlack}>
+          <Slider min={4} max={80} value={config.effects.filmBarSize} onChange={(filmBarSize) => { if (!isBlack) return lock(); set((c) => ({ ...c, effects: { ...c.effects, filmBarSize } })); }} />
         </Field>
-        <Field label="Background motion">
-          <SoftSelect value={config.effects.bgMotion} onChange={(bgMotion) => set((c) => ({ ...c, effects: { ...c.effects, bgMotion: bgMotion as ProfileTemplate["effects"]["bgMotion"] } }))} options={[{ value: "none", label: "None" }, { value: "drift", label: "Drift" }, { value: "zoom", label: "Zoom" }, { value: "kenburns", label: "Ken Burns" }]} />
+        <Field label="Background motion" black={!isBlack}>
+          <SoftSelect value={config.effects.bgMotion} onChange={(bgMotion) => set((c) => ({ ...c, effects: { ...c.effects, bgMotion: bgMotion as ProfileTemplate["effects"]["bgMotion"] } }))} onBlackLock={blackLock} options={markBlack([{ value: "none", label: "None" }, { value: "drift", label: "Drift" }, { value: "zoom", label: "Zoom" }, { value: "kenburns", label: "Ken Burns" }], ["none"], isBlack)} />
         </Field>
-        <Field label="BG motion speed" hint={`${config.effects.bgMotionSpeed}`}>
-          <Slider min={10} max={100} value={config.effects.bgMotionSpeed} onChange={(bgMotionSpeed) => set((c) => ({ ...c, effects: { ...c.effects, bgMotionSpeed } }))} />
+        <Field label="BG motion speed" hint={`${config.effects.bgMotionSpeed}`} black={!isBlack}>
+          <Slider min={10} max={100} value={config.effects.bgMotionSpeed} onChange={(bgMotionSpeed) => { if (!isBlack) return lock(); set((c) => ({ ...c, effects: { ...c.effects, bgMotionSpeed } })); }} />
         </Field>
-        <Field label="Card sheen">
-          <SoftOnOff value={config.effects.cardSheen} onChange={(cardSheen) => set((c) => ({ ...c, effects: { ...c.effects, cardSheen } }))} />
+        <Field label="Card sheen" black={!isBlack}>
+          <SoftOnOff value={config.effects.cardSheen} onChange={(cardSheen) => set((c) => ({ ...c, effects: { ...c.effects, cardSheen } }))} blackLocked={!isBlack} onBlackLock={blackLock} />
         </Field>
-        <Field label="Animated border">
-          <SoftOnOff value={config.effects.borderAnimate} onChange={(borderAnimate) => set((c) => ({ ...c, effects: { ...c.effects, borderAnimate } }))} />
+        <Field label="Animated border" black={!isBlack}>
+          <SoftOnOff value={config.effects.borderAnimate} onChange={(borderAnimate) => set((c) => ({ ...c, effects: { ...c.effects, borderAnimate } }))} blackLocked={!isBlack} onBlackLock={blackLock} />
         </Field>
-        <Field label="Border animate speed" hint={`${config.effects.borderAnimateSpeed}`}>
-          <Slider min={10} max={100} value={config.effects.borderAnimateSpeed} onChange={(borderAnimateSpeed) => set((c) => ({ ...c, effects: { ...c.effects, borderAnimateSpeed } }))} />
+        <Field label="Border animate speed" hint={`${config.effects.borderAnimateSpeed}`} black={!isBlack}>
+          <Slider min={10} max={100} value={config.effects.borderAnimateSpeed} onChange={(borderAnimateSpeed) => { if (!isBlack) return lock(); set((c) => ({ ...c, effects: { ...c.effects, borderAnimateSpeed } })); }} />
         </Field>
-        <Field label="Name gradient fill">
-          <SoftOnOff value={config.effects.nameGradient} onChange={(nameGradient) => set((c) => ({ ...c, effects: { ...c.effects, nameGradient } }))} />
+        <Field label="Name gradient fill" black={!isBlack}>
+          <SoftOnOff value={config.effects.nameGradient} onChange={(nameGradient) => set((c) => ({ ...c, effects: { ...c.effects, nameGradient } }))} blackLocked={!isBlack} onBlackLock={blackLock} />
         </Field>
         <ColorField label="Name gradient from" value={config.effects.nameGradientFrom} onChange={(nameGradientFrom) => set((c) => ({ ...c, effects: { ...c.effects, nameGradientFrom } }))} />
         <ColorField label="Name gradient to" value={config.effects.nameGradientTo} onChange={(nameGradientTo) => set((c) => ({ ...c, effects: { ...c.effects, nameGradientTo } }))} />
-        <Field label="Magnetic socials">
-          <SoftOnOff value={config.effects.magneticSocials} onChange={(magneticSocials) => set((c) => ({ ...c, effects: { ...c.effects, magneticSocials } }))} />
+        <Field label="Magnetic socials" black={!isBlack}>
+          <SoftOnOff value={config.effects.magneticSocials} onChange={(magneticSocials) => set((c) => ({ ...c, effects: { ...c.effects, magneticSocials } }))} blackLocked={!isBlack} onBlackLock={blackLock} />
         </Field>
         <Field label="Hover lift" hint={`${config.effects.hoverLift}px`}>
           <Slider min={0} max={16} value={config.effects.hoverLift} onChange={(hoverLift) => set((c) => ({ ...c, effects: { ...c.effects, hoverLift } }))} />
         </Field>
-        <Field label="Spotlight follow">
-          <SoftOnOff value={config.effects.spotlight} onChange={(spotlight) => set((c) => ({ ...c, effects: { ...c.effects, spotlight } }))} />
+        <Field label="Spotlight follow" black={!isBlack}>
+          <SoftOnOff value={config.effects.spotlight} onChange={(spotlight) => set((c) => ({ ...c, effects: { ...c.effects, spotlight } }))} blackLocked={!isBlack} onBlackLock={blackLock} />
         </Field>
-        <Field label="Spotlight intensity" hint={`${config.effects.spotlightIntensity}`}>
-          <Slider min={0} max={100} value={config.effects.spotlightIntensity} onChange={(spotlightIntensity) => set((c) => ({ ...c, effects: { ...c.effects, spotlightIntensity } }))} />
+        <Field label="Spotlight intensity" hint={`${config.effects.spotlightIntensity}`} black={!isBlack}>
+          <Slider min={0} max={100} value={config.effects.spotlightIntensity} onChange={(spotlightIntensity) => { if (!isBlack) return lock(); set((c) => ({ ...c, effects: { ...c.effects, spotlightIntensity } })); }} />
         </Field>
         <Field label="Pulse rank badge">
           <SoftOnOff value={config.effects.pulseRank} onChange={(pulseRank) => set((c) => ({ ...c, effects: { ...c.effects, pulseRank } }))} />
         </Field>
-        <Field label="Shake badges on hover">
-          <SoftOnOff value={config.effects.shakeBadges} onChange={(shakeBadges) => set((c) => ({ ...c, effects: { ...c.effects, shakeBadges } }))} />
+        <Field label="Shake badges on hover" black={!isBlack}>
+          <SoftOnOff value={config.effects.shakeBadges} onChange={(shakeBadges) => set((c) => ({ ...c, effects: { ...c.effects, shakeBadges } }))} blackLocked={!isBlack} onBlackLock={blackLock} />
         </Field>
-        <Field label="Watermark">
-          <SoftOnOff value={config.effects.watermark} onChange={(watermark) => set((c) => ({ ...c, effects: { ...c.effects, watermark } }))} />
+        <Field label="Watermark" black={!isBlack}>
+          <SoftOnOff value={config.effects.watermark} onChange={(watermark) => set((c) => ({ ...c, effects: { ...c.effects, watermark } }))} blackLocked={!isBlack} onBlackLock={blackLock} />
         </Field>
-        <Field label="Watermark text">
-          <input className="soft-input" value={config.effects.watermarkText} onChange={(e) => set((c) => ({ ...c, effects: { ...c.effects, watermarkText: e.target.value } }))} />
+        <Field label="Watermark text" black={!isBlack}>
+          <input className="soft-input" value={config.effects.watermarkText} onChange={(e) => { if (!isBlack) return lock(); set((c) => ({ ...c, effects: { ...c.effects, watermarkText: e.target.value } })); }} />
         </Field>
-        <Field label="Watermark opacity" hint={`${config.effects.watermarkOpacity}%`}>
-          <Slider min={0} max={40} value={config.effects.watermarkOpacity} onChange={(watermarkOpacity) => set((c) => ({ ...c, effects: { ...c.effects, watermarkOpacity } }))} />
+        <Field label="Watermark opacity" hint={`${config.effects.watermarkOpacity}%`} black={!isBlack}>
+          <Slider min={0} max={40} value={config.effects.watermarkOpacity} onChange={(watermarkOpacity) => { if (!isBlack) return lock(); set((c) => ({ ...c, effects: { ...c.effects, watermarkOpacity } })); }} />
         </Field>
       </Section>
 
@@ -397,8 +449,8 @@ export function MiscEditor({ initial }: { initial: ProfileTemplate }) {
         <Field label="Avatar Y offset" hint={`${config.appearance.avatarOffsetY}px`}>
           <Slider min={-20} max={40} value={config.appearance.avatarOffsetY} onChange={(avatarOffsetY) => set((c) => ({ ...c, appearance: { ...c.appearance, avatarOffsetY } }))} />
         </Field>
-        <Field label="Tag style">
-          <SoftSelect value={config.appearance.tagStyle} onChange={(tagStyle) => set((c) => ({ ...c, appearance: { ...c.appearance, tagStyle: tagStyle as ProfileTemplate["appearance"]["tagStyle"] } }))} options={[{ value: "pill", label: "Pill" }, { value: "square", label: "Square" }, { value: "ghost", label: "Ghost" }, { value: "outline", label: "Outline" }, { value: "neon", label: "Neon" }]} />
+        <Field label="Tag style" black={!isBlack}>
+          <SoftSelect value={config.appearance.tagStyle} onChange={(tagStyle) => set((c) => ({ ...c, appearance: { ...c.appearance, tagStyle: tagStyle as ProfileTemplate["appearance"]["tagStyle"] } }))} onBlackLock={blackLock} options={markBlack([{ value: "pill", label: "Pill" }, { value: "square", label: "Square" }, { value: "ghost", label: "Ghost" }, { value: "outline", label: "Outline" }, { value: "neon", label: "Neon" }], ["pill", "square", "ghost", "outline"], isBlack)} />
         </Field>
         <Field label="Tag size" hint={`${config.appearance.tagSize}px`}>
           <Slider min={10} max={18} value={config.appearance.tagSize} onChange={(tagSize) => set((c) => ({ ...c, appearance: { ...c.appearance, tagSize } }))} />
@@ -443,25 +495,25 @@ export function MiscEditor({ initial }: { initial: ProfileTemplate }) {
       </Section>
 
       <Section title="Cursor & film">
-        <Field label="Cursor">
-          <SoftSelect value={config.appearance.cursor} onChange={(cursor) => set((c) => ({ ...c, appearance: { ...c.appearance, cursor: cursor as ProfileTemplate["appearance"]["cursor"] } }))} options={[{ value: "system", label: "System" }, { value: "minimal", label: "Minimal ring" }, { value: "dot", label: "Glow dot" }, { value: "cross", label: "Cross" }, { value: "custom", label: "Custom image" }]} />
+        <Field label="Cursor" black={!isBlack}>
+          <SoftSelect value={config.appearance.cursor} onChange={(cursor) => set((c) => ({ ...c, appearance: { ...c.appearance, cursor: cursor as ProfileTemplate["appearance"]["cursor"] } }))} onBlackLock={blackLock} options={markBlack([{ value: "system", label: "System" }, { value: "minimal", label: "Minimal ring" }, { value: "dot", label: "Glow dot" }, { value: "cross", label: "Cross" }, { value: "custom", label: "Custom image" }], ["system"], isBlack)} />
         </Field>
-        <Field label="Cursor size" hint={`${config.appearance.cursorSize}px`}>
-          <Slider min={8} max={48} value={config.appearance.cursorSize} onChange={(cursorSize) => set((c) => ({ ...c, appearance: { ...c.appearance, cursorSize } }))} />
+        <Field label="Cursor size" hint={`${config.appearance.cursorSize}px`} black={!isBlack}>
+          <Slider min={8} max={48} value={config.appearance.cursorSize} onChange={(cursorSize) => { if (!isBlack) return lock(); set((c) => ({ ...c, appearance: { ...c.appearance, cursorSize } })); }} />
         </Field>
-        {config.appearance.cursor === "custom" && (
+        {config.appearance.cursor === "custom" && isBlack && (
           <div className="sm:col-span-2">
             <MediaUpload label="Custom cursor image" hint="png/webp small" kind="cover" accept="image/png,image/webp,image/gif" value={config.appearance.customCursorUrl} onChange={(customCursorUrl) => set((c) => ({ ...c, appearance: { ...c.appearance, customCursorUrl } }))} />
           </div>
         )}
-        <Field label="Cursor trail">
-          <SoftSelect value={config.appearance.cursorTrail} onChange={(cursorTrail) => set((c) => ({ ...c, appearance: { ...c.appearance, cursorTrail: cursorTrail as ProfileTemplate["appearance"]["cursorTrail"] } }))} options={[{ value: "none", label: "None" }, { value: "fade", label: "Fade" }, { value: "spark", label: "Spark" }, { value: "smoke", label: "Smoke" }]} />
+        <Field label="Cursor trail" black={!isBlack}>
+          <SoftSelect value={config.appearance.cursorTrail} onChange={(cursorTrail) => set((c) => ({ ...c, appearance: { ...c.appearance, cursorTrail: cursorTrail as ProfileTemplate["appearance"]["cursorTrail"] } }))} onBlackLock={blackLock} options={markBlack([{ value: "none", label: "None" }, { value: "fade", label: "Fade" }, { value: "spark", label: "Spark" }, { value: "smoke", label: "Smoke" }], ["none"], isBlack)} />
         </Field>
-        <Field label="Trail length" hint={`${config.appearance.cursorTrailLength}`}>
-          <Slider min={4} max={24} value={config.appearance.cursorTrailLength} onChange={(cursorTrailLength) => set((c) => ({ ...c, appearance: { ...c.appearance, cursorTrailLength } }))} />
+        <Field label="Trail length" hint={`${config.appearance.cursorTrailLength}`} black={!isBlack}>
+          <Slider min={4} max={24} value={config.appearance.cursorTrailLength} onChange={(cursorTrailLength) => { if (!isBlack) return lock(); set((c) => ({ ...c, appearance: { ...c.appearance, cursorTrailLength } })); }} />
         </Field>
-        <Field label="Film grain" hint={`${config.appearance.grain}%`}>
-          <Slider min={0} max={100} value={config.appearance.grain} onChange={(grain) => set((c) => ({ ...c, appearance: { ...c.appearance, grain } }))} />
+        <Field label="Film grain" hint={`${config.appearance.grain}%`} black={!isBlack}>
+          <Slider min={0} max={100} value={config.appearance.grain} onChange={(grain) => { if (!isBlack && grain > 15) return lock(); set((c) => ({ ...c, appearance: { ...c.appearance, grain } })); }} />
         </Field>
         <Field label="Accent glow" hint={`${config.appearance.accentGlow}`}>
           <Slider min={0} max={100} value={config.appearance.accentGlow} onChange={(accentGlow) => set((c) => ({ ...c, appearance: { ...c.appearance, accentGlow } }))} />
@@ -484,11 +536,11 @@ export function MiscEditor({ initial }: { initial: ProfileTemplate }) {
       </Section>
 
       <Section title="Panels / glass box">
-        <Field label="3D tilt">
-          <SoftSelect value={config.box.tilt} onChange={(tilt) => set((c) => ({ ...c, box: { ...c.box, tilt: tilt as ProfileTemplate["box"]["tilt"] } }))} options={[{ value: "none", label: "Off" }, { value: "subtle", label: "Subtle" }, { value: "standard", label: "Standard" }, { value: "strong", label: "Strong" }, { value: "extreme", label: "Extreme" }]} />
+        <Field label="3D tilt" black={!isBlack}>
+          <SoftSelect value={config.box.tilt} onChange={(tilt) => set((c) => ({ ...c, box: { ...c.box, tilt: tilt as ProfileTemplate["box"]["tilt"] } }))} onBlackLock={blackLock} options={markBlack([{ value: "none", label: "Off" }, { value: "subtle", label: "Subtle" }, { value: "standard", label: "Standard" }, { value: "strong", label: "Strong" }, { value: "extreme", label: "Extreme" }], ["none", "subtle", "standard"], isBlack)} />
         </Field>
-        <Field label="Tilt hover scale" hint={`${config.box.tiltScale}%`}>
-          <Slider min={100} max={108} value={config.box.tiltScale} onChange={(tiltScale) => set((c) => ({ ...c, box: { ...c.box, tiltScale } }))} />
+        <Field label="Tilt hover scale" hint={`${config.box.tiltScale}%`} black={!isBlack}>
+          <Slider min={100} max={108} value={config.box.tiltScale} onChange={(tiltScale) => { if (!isBlack) return lock(); set((c) => ({ ...c, box: { ...c.box, tiltScale } })); }} />
         </Field>
         <Field label="Box width" hint={`${config.box.width}px`}>
           <Slider min={280} max={900} value={config.box.width} onChange={(width) => set((c) => ({ ...c, box: { ...c.box, width } }))} />
@@ -502,12 +554,12 @@ export function MiscEditor({ initial }: { initial: ProfileTemplate }) {
         <Field label="Box radius" hint={`${config.box.radius}px`}>
           <Slider min={0} max={48} value={config.box.radius} onChange={(radius) => set((c) => ({ ...c, box: { ...c.box, radius } }))} />
         </Field>
-        <Field label="Glass blur" hint={`${config.box.blur}`}>
-          <Slider min={0} max={60} value={config.box.blur} onChange={(blur) => set((c) => ({ ...c, box: { ...c.box, blur } }))} />
+        <Field label="Glass blur" hint={`${config.box.blur}`} black={!isBlack}>
+          <Slider min={0} max={60} value={config.box.blur} onChange={(blur) => { if (!isBlack && blur > 8) return lock(); set((c) => ({ ...c, box: { ...c.box, blur } })); }} />
         </Field>
         <ColorField label="Box color" value={config.box.color} onChange={(color) => set((c) => ({ ...c, box: { ...c.box, color } }))} />
-        <Field label="Gradient fill">
-          <SoftOnOff value={config.box.gradientFill} onChange={(gradientFill) => set((c) => ({ ...c, box: { ...c.box, gradientFill } }))} />
+        <Field label="Gradient fill" black={!isBlack}>
+          <SoftOnOff value={config.box.gradientFill} onChange={(gradientFill) => set((c) => ({ ...c, box: { ...c.box, gradientFill } }))} blackLocked={!isBlack} onBlackLock={blackLock} />
         </Field>
         <ColorField label="Gradient from" value={config.box.gradientFrom} onChange={(gradientFrom) => set((c) => ({ ...c, box: { ...c.box, gradientFrom } }))} />
         <ColorField label="Gradient to" value={config.box.gradientTo} onChange={(gradientTo) => set((c) => ({ ...c, box: { ...c.box, gradientTo } }))} />
@@ -524,8 +576,8 @@ export function MiscEditor({ initial }: { initial: ProfileTemplate }) {
         <Field label="Soft panel glow">
           <SoftOnOff value={config.box.glow} onChange={(glow) => set((c) => ({ ...c, box: { ...c.box, glow } }))} />
         </Field>
-        <Field label="Inner glow">
-          <SoftOnOff value={config.box.innerGlow} onChange={(innerGlow) => set((c) => ({ ...c, box: { ...c.box, innerGlow } }))} />
+        <Field label="Inner glow" black={!isBlack}>
+          <SoftOnOff value={config.box.innerGlow} onChange={(innerGlow) => set((c) => ({ ...c, box: { ...c.box, innerGlow } }))} blackLocked={!isBlack} onBlackLock={blackLock} />
         </Field>
         <Field label="Inner glow opacity" hint={`${config.box.innerGlowOpacity}%`}>
           <Slider min={0} max={60} value={config.box.innerGlowOpacity} onChange={(innerGlowOpacity) => set((c) => ({ ...c, box: { ...c.box, innerGlowOpacity } }))} />
@@ -540,8 +592,8 @@ export function MiscEditor({ initial }: { initial: ProfileTemplate }) {
         <Field label="Shadow Y" hint={`${config.box.shadowY}px`}>
           <Slider min={0} max={80} value={config.box.shadowY} onChange={(shadowY) => set((c) => ({ ...c, box: { ...c.box, shadowY } }))} />
         </Field>
-        <Field label="Panel pattern">
-          <SoftSelect value={config.box.pattern} onChange={(pattern) => set((c) => ({ ...c, box: { ...c.box, pattern: pattern as ProfileTemplate["box"]["pattern"] } }))} options={[{ value: "none", label: "None" }, { value: "dots", label: "Dots" }, { value: "grid", label: "Grid" }, { value: "diagonal", label: "Diagonal" }, { value: "noise", label: "Noise" }]} />
+        <Field label="Panel pattern" black={!isBlack}>
+          <SoftSelect value={config.box.pattern} onChange={(pattern) => set((c) => ({ ...c, box: { ...c.box, pattern: pattern as ProfileTemplate["box"]["pattern"] } }))} onBlackLock={blackLock} options={markBlack([{ value: "none", label: "None" }, { value: "dots", label: "Dots" }, { value: "grid", label: "Grid" }, { value: "diagonal", label: "Diagonal" }, { value: "noise", label: "Noise" }], ["none"], isBlack)} />
         </Field>
         <Field label="Pattern opacity" hint={`${config.box.patternOpacity}%`}>
           <Slider min={0} max={40} value={config.box.patternOpacity} onChange={(patternOpacity) => set((c) => ({ ...c, box: { ...c.box, patternOpacity } }))} />
@@ -555,8 +607,8 @@ export function MiscEditor({ initial }: { initial: ProfileTemplate }) {
         <Field label="Track player">
           <SoftSelect value={config.audio.trackPlayer} onChange={(trackPlayer) => set((c) => ({ ...c, audio: { ...c.audio, trackPlayer: trackPlayer as ProfileTemplate["audio"]["trackPlayer"] } }))} options={[{ value: "none", label: "Hidden" }, { value: "embed", label: "Full player" }, { value: "mini", label: "Mini" }]} />
         </Field>
-        <Field label="Player style">
-          <SoftSelect value={config.audio.playerStyle} onChange={(playerStyle) => set((c) => ({ ...c, audio: { ...c.audio, playerStyle: playerStyle as ProfileTemplate["audio"]["playerStyle"] } }))} options={[{ value: "default", label: "Default" }, { value: "glass", label: "Glass" }, { value: "minimal", label: "Minimal" }, { value: "neon", label: "Neon" }]} />
+        <Field label="Player style" black={!isBlack}>
+          <SoftSelect value={config.audio.playerStyle} onChange={(playerStyle) => set((c) => ({ ...c, audio: { ...c.audio, playerStyle: playerStyle as ProfileTemplate["audio"]["playerStyle"] } }))} onBlackLock={blackLock} options={markBlack([{ value: "default", label: "Default" }, { value: "glass", label: "Glass" }, { value: "minimal", label: "Minimal" }, { value: "neon", label: "Neon" }], ["default", "minimal"], isBlack)} />
         </Field>
         <Field label="Autoplay">
           <SoftOnOff value={config.audio.autoPlay} onChange={(autoPlay) => set((c) => ({ ...c, audio: { ...c.audio, autoPlay } }))} />
@@ -567,11 +619,11 @@ export function MiscEditor({ initial }: { initial: ProfileTemplate }) {
         <Field label="Equalizer">
           <SoftOnOff value={config.audio.visualizer} onChange={(visualizer) => set((c) => ({ ...c, audio: { ...c.audio, visualizer } }))} />
         </Field>
-        <Field label="EQ style">
-          <SoftSelect value={config.audio.eqStyle} onChange={(eqStyle) => set((c) => ({ ...c, audio: { ...c.audio, eqStyle: eqStyle as ProfileTemplate["audio"]["eqStyle"] } }))} options={[{ value: "bars", label: "Bars" }, { value: "wave", label: "Wave" }, { value: "dots", label: "Dots" }]} />
+        <Field label="EQ style" black={!isBlack}>
+          <SoftSelect value={config.audio.eqStyle} onChange={(eqStyle) => set((c) => ({ ...c, audio: { ...c.audio, eqStyle: eqStyle as ProfileTemplate["audio"]["eqStyle"] } }))} onBlackLock={blackLock} options={markBlack([{ value: "bars", label: "Bars" }, { value: "wave", label: "Wave" }, { value: "dots", label: "Dots" }], ["bars"], isBlack)} />
         </Field>
-        <Field label="EQ color">
-          <SoftSelect value={config.audio.eqColor} onChange={(eqColor) => set((c) => ({ ...c, audio: { ...c.audio, eqColor: eqColor as ProfileTemplate["audio"]["eqColor"] } }))} options={[{ value: "white", label: "White" }, { value: "theme", label: "Theme" }, { value: "rainbow", label: "Rainbow" }]} />
+        <Field label="EQ color" black={!isBlack}>
+          <SoftSelect value={config.audio.eqColor} onChange={(eqColor) => set((c) => ({ ...c, audio: { ...c.audio, eqColor: eqColor as ProfileTemplate["audio"]["eqColor"] } }))} onBlackLock={blackLock} options={markBlack([{ value: "white", label: "White" }, { value: "theme", label: "Theme" }, { value: "rainbow", label: "Rainbow" }], ["white"], isBlack)} />
         </Field>
         <Field label="Show cover">
           <SoftOnOff value={config.audio.showCover} onChange={(showCover) => set((c) => ({ ...c, audio: { ...c.audio, showCover } }))} />
@@ -587,9 +639,24 @@ export function MiscEditor({ initial }: { initial: ProfileTemplate }) {
         onSave={() =>
           startTransition(async () => {
             const res = await saveProfileConfig(config);
-            setMessage(res.ok ? res.message || "Saved." : res.error || "Failed.");
+            if (res.ok) {
+              setBaseline(JSON.stringify(config));
+              setMessage(res.message || "Saved.");
+            } else {
+              setMessage(res.error || "Failed.");
+            }
           })
         }
+      />
+      </div>
+
+      <StyleLivePreview
+        config={config}
+        avatarUrl={avatarUrl}
+        uid={uid}
+        discordUsername={discordUsername}
+        dirty={dirty}
+        isBlack={isBlack}
       />
     </div>
   );

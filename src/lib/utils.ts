@@ -4,6 +4,11 @@ export function cn(...inputs: ClassValue[]) {
   return clsx(inputs);
 }
 
+export function isVideoUrl(url?: string | null) {
+  if (!url) return false;
+  return /\.mp4($|\?)/i.test(url) || /[?&]format=mp4\b/i.test(url);
+}
+
 /** Matches DB constraint profiles_slug_format: start/end alphanumeric, 3–25 chars */
 export function slugify(input: string) {
   let slug = input

@@ -18,6 +18,11 @@ export type ProfileRow = {
   public_flags: number | null;
   slug: string;
   uid: number;
+  plan?: string | null;
+  plan_status?: string | null;
+  plan_period_end?: string | null;
+  stripe_customer_id?: string | null;
+  stripe_subscription_id?: string | null;
   discord_raw: Record<string, unknown>;
   created_at: string;
   updated_at: string;

@@ -8,7 +8,28 @@ import {
   mergeTemplate,
 } from "@/lib/profile-template";
 import type { ProfileRow } from "@/lib/supabase/types";
+import { hasBlack } from "@/lib/plan";
 import { slugify } from "@/lib/utils";
+
+/** Persist login for 30 days */
+const SESSION_MAX_AGE = 60 * 60 * 24 * 30;
+/** Refresh profile fields from DB at most once per hour */
+const PROFILE_SYNC_MS = 60 * 60 * 1000;
+
+const isProd =
+  process.env.VERCEL === "1" || process.env.NODE_ENV === "production";
+
+function cookieBase(maxAge: number) {
+  return {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    path: "/",
+    secure: isProd,
+    maxAge,
+    // Share cookies across apex + www so Discord OAuth callback keeps PKCE/state
+    ...(isProd ? { domain: ".under.bio" } : {}),
+  };
+}
 
 async function ensureUniqueSlug(base: string, excludeProfileId?: string) {
   const admin = createAdminClient();
@@ -134,11 +155,45 @@ export const { handlers, auth, signIn, signOut } = NextAuth(() => {
   return {
     trustHost: true,
     secret: env.AUTH_SECRET,
-    session: { strategy: "jwt", maxAge: 60 * 60 * 24 * 7 },
+    session: {
+      strategy: "jwt",
+      maxAge: SESSION_MAX_AGE,
+      updateAge: 60 * 60 * 24, // refresh cookie at most once/day
+    },
+    jwt: {
+      maxAge: SESSION_MAX_AGE,
+    },
+    cookies: {
+      sessionToken: {
+        options: cookieBase(SESSION_MAX_AGE),
+      },
+      callbackUrl: {
+        options: cookieBase(60 * 15),
+      },
+      csrfToken: {
+        options: {
+          ...cookieBase(SESSION_MAX_AGE),
+          httpOnly: false,
+        },
+      },
+      // Kept for safety if a provider still emits PKCE
+      pkceCodeVerifier: {
+        options: cookieBase(60 * 15),
+      },
+      state: {
+        options: cookieBase(60 * 15),
+      },
+      nonce: {
+        options: cookieBase(60 * 15),
+      },
+    },
     providers: [
       Discord({
         clientId: env.AUTH_DISCORD_ID,
         clientSecret: env.AUTH_DISCORD_SECRET,
+        // Prefer state over PKCE — avoids InvalidCheck pkceCodeVerifier cookie parse failures
+        // (common on custom domains / www vs apex / strict browsers)
+        checks: ["state"],
         authorization: {
           params: {
             scope: "identify email guilds.members.read",
@@ -170,36 +225,57 @@ export const { handlers, auth, signIn, signOut } = NextAuth(() => {
             token.profileId = profile.id;
             token.slug = profile.slug;
             token.uid = profile.uid;
+            token.isBlack = hasBlack(profile.plan, profile.plan_status);
             token.name = profile.global_name || profile.username;
             token.picture = profile.avatar_url ?? undefined;
             token.email = profile.email ?? undefined;
+            token.syncedAt = Date.now();
           } catch (error) {
             console.error("JWT profile sync failed", error);
           }
-        } else if (token.discordId) {
+          return token;
+        }
+
+        // Keep session sticky: only lightly refresh profile from DB periodically
+        const syncedAt = typeof token.syncedAt === "number" ? token.syncedAt : 0;
+        if (token.discordId && Date.now() - syncedAt > PROFILE_SYNC_MS) {
           try {
             const admin = createAdminClient();
             const { data } = await admin
               .from("profiles")
-              .select("id, slug, uid, global_name, username, avatar_url, email")
-              .eq("discord_id", token.discordId)
+              .select(
+                "id, slug, uid, global_name, username, avatar_url, email, plan, plan_status",
+              )
+              .eq("discord_id", String(token.discordId))
               .maybeSingle();
             const row = data as Pick<
               ProfileRow,
-              "id" | "slug" | "uid" | "global_name" | "username" | "avatar_url" | "email"
+              | "id"
+              | "slug"
+              | "uid"
+              | "global_name"
+              | "username"
+              | "avatar_url"
+              | "email"
+              | "plan"
+              | "plan_status"
             > | null;
             if (row) {
               token.profileId = row.id;
               token.slug = row.slug;
               token.uid = row.uid;
+              token.isBlack = hasBlack(row.plan, row.plan_status);
               token.name = row.global_name || row.username;
               token.picture = row.avatar_url ?? undefined;
               token.email = row.email ?? undefined;
             }
+            token.syncedAt = Date.now();
           } catch {
-            // ignore refresh failures
+            // never kill the session on a soft refresh failure
+            token.syncedAt = Date.now();
           }
         }
+
         return token;
       },
       async session({ session, token }) {
@@ -208,6 +284,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth(() => {
         session.user.profileId = String(token.profileId ?? "");
         session.user.slug = String(token.slug ?? "");
         session.user.uid = Number(token.uid ?? 0);
+        session.user.isBlack = Boolean(token.isBlack);
         if (token.name) session.user.name = token.name;
         if (typeof token.picture === "string") session.user.image = token.picture;
         if (typeof token.email === "string") session.user.email = token.email;

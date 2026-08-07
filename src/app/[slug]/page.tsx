@@ -3,6 +3,7 @@ import { getPageByProfileId, getProfileBySlug } from "@/lib/data";
 import { maybeRecordPageView, getViewRank } from "@/lib/views";
 import { PublicProfile } from "@/components/PublicProfile";
 import { OWNER_DISCORD_IDS } from "@/lib/socials";
+import { enforceFreePlanConfig, hasBlack } from "@/lib/plan";
 import type { Metadata } from "next";
 
 const reserved = new Set([
@@ -15,6 +16,8 @@ const reserved = new Set([
   "faq",
   "templates",
   "shop",
+  "black",
+  "admin",
   "_next",
 ]);
 
@@ -57,13 +60,13 @@ export default async function PublicSlugPage({
   }
 
   const totalViews = page.total_views + (counted ? 1 : 0);
-  const rank = page.config.options.showRank
-    ? await getViewRank(totalViews)
-    : null;
+  const black = hasBlack(profile.plan, profile.plan_status);
+  const config = black ? page.config : enforceFreePlanConfig(page.config);
+  const rank = config.options.showRank ? await getViewRank(totalViews) : null;
 
   return (
     <PublicProfile
-      config={page.config}
+      config={config}
       avatarUrl={profile.avatar_url}
       uid={profile.uid}
       totalViews={totalViews}
@@ -72,6 +75,7 @@ export default async function PublicSlugPage({
       discordUsername={profile.username}
       isOwner={OWNER_DISCORD_IDS.has(profile.discord_id)}
       discordVerified={Boolean(profile.verified)}
+      isBlack={black}
     />
   );
 }

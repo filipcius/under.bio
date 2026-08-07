@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { requireSession } from "@/lib/session";
+import { isAdminDiscordId } from "@/lib/admin-ids";
 
 export default async function DashboardLayout({
   children,
@@ -17,6 +18,7 @@ export default async function DashboardLayout({
           image: session.user.image,
           slug: session.user.slug,
         }}
+        isAdmin={isAdminDiscordId(session.user.discordId)}
       />
       <main className="flex-1">{children}</main>
       <Footer />

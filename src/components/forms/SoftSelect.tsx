@@ -2,20 +2,23 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { Icon } from "@/components/Icon";
+import { BlackDiamond } from "@/components/BlackDiamond";
 import { cn } from "@/lib/utils";
 
-export type SoftOption = { value: string; label: string };
+export type SoftOption = { value: string; label: string; black?: boolean };
 
 export function SoftSelect({
   value,
   onChange,
   options,
   className,
+  onBlackLock,
 }: {
   value: string;
   onChange: (value: string) => void;
   options: SoftOption[];
   className?: string;
+  onBlackLock?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -48,7 +51,10 @@ export function SoftSelect({
         aria-controls={listId}
         onClick={() => setOpen((v) => !v)}
       >
-        <span className="truncate">{current?.label ?? value}</span>
+        <span className="inline-flex min-w-0 items-center gap-1.5 truncate">
+          {current?.black && <BlackDiamond className="shrink-0" />}
+          <span className="truncate">{current?.label ?? value}</span>
+        </span>
         <span className={cn("soft-select-chevron", open && "rotate-180")}>
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>
             <path
@@ -72,11 +78,19 @@ export function SoftSelect({
                   type="button"
                   className={cn("soft-select-option", active && "is-active")}
                   onClick={() => {
+                    if (opt.black && onBlackLock) {
+                      onBlackLock();
+                      setOpen(false);
+                      return;
+                    }
                     onChange(opt.value);
                     setOpen(false);
                   }}
                 >
-                  <span>{opt.label}</span>
+                  <span className="inline-flex items-center gap-1.5">
+                    {opt.black && <BlackDiamond />}
+                    {opt.label}
+                  </span>
                   {active && <Icon name="check" className="text-[10px] text-white/70" glow={false} />}
                 </button>
               </li>
@@ -92,24 +106,35 @@ export function SoftSelect({
 export function SoftOnOff({
   value,
   onChange,
+  blackLocked,
+  onBlackLock,
 }: {
   value: boolean;
   onChange: (value: boolean) => void;
+  blackLocked?: boolean;
+  onBlackLock?: () => void;
 }) {
   return (
     <div className="soft-onoff" role="group" aria-label="On or Off">
       <button
         type="button"
-        className={cn("soft-onoff-btn", value && "is-active")}
-        aria-pressed={value}
-        onClick={() => onChange(true)}
+        className={cn("soft-onoff-btn", value && !blackLocked && "is-active")}
+        aria-pressed={value && !blackLocked}
+        onClick={() => {
+          if (blackLocked && onBlackLock) {
+            onBlackLock();
+            return;
+          }
+          onChange(true);
+        }}
       >
+        {blackLocked && <BlackDiamond className="mr-1" />}
         On
       </button>
       <button
         type="button"
-        className={cn("soft-onoff-btn", !value && "is-active")}
-        aria-pressed={!value}
+        className={cn("soft-onoff-btn", (!value || blackLocked) && "is-active")}
+        aria-pressed={!value || Boolean(blackLocked)}
         onClick={() => onChange(false)}
       >
         Off

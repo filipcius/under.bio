@@ -21,6 +21,7 @@ import {
   ProfileParticles,
 } from "@/components/ProfileEffects";
 import { SOCIAL_PLATFORMS } from "@/lib/socials";
+import { isVideoUrl } from "@/lib/utils";
 
 function relativeJoin(joinedAt: string) {
   const diff = Date.now() - new Date(joinedAt).getTime();
@@ -88,6 +89,8 @@ export function PublicProfile({
   discordUsername,
   isOwner,
   discordVerified,
+  isBlack = false,
+  preview = false,
 }: {
   config: ProfileTemplate;
   avatarUrl?: string | null;
@@ -98,8 +101,13 @@ export function PublicProfile({
   discordUsername: string;
   isOwner: boolean;
   discordVerified: boolean;
+  isBlack?: boolean;
+  /** Compact editor preview — no page lock / custom cursor / reveal gate */
+  preview?: boolean;
 }) {
-  const [revealed, setRevealed] = useState(!config.options.showRevealScreen);
+  const [revealed, setRevealed] = useState(
+    preview ? true : !config.options.showRevealScreen,
+  );
   const [spot, setSpot] = useState({ x: 50, y: 50 });
   const primary = config.appearance.primaryText;
   const secondary = config.appearance.secondaryText;
@@ -108,26 +116,30 @@ export function PublicProfile({
   const panelBg = config.box.gradientFill
     ? `linear-gradient(160deg, ${hexToRgba(config.box.gradientFrom, config.box.opacity)}, ${hexToRgba(config.box.gradientTo, config.box.opacity)})`
     : hexToRgba(config.box.color, config.box.opacity);
-  const tiltEnabled = config.box.tilt !== "none";
+  const tiltEnabled = !preview && config.box.tilt !== "none";
   const tiltStrength = tiltStrengthOf(config.box.tilt);
   const gap = config.layout.compact ? Math.min(config.layout.gap, 8) : config.layout.gap;
   const a = config.appearance;
   const fx = config.effects;
+  const bgVideo = isVideoUrl(config.background.url);
+  const bannerVideo = isVideoUrl(config.banner.url);
 
   const customCursorOn =
-    a.cursor === "minimal" ||
-    a.cursor === "dot" ||
-    a.cursor === "cross" ||
-    (a.cursor === "custom" && Boolean(a.customCursorUrl));
+    !preview &&
+    (a.cursor === "minimal" ||
+      a.cursor === "dot" ||
+      a.cursor === "cross" ||
+      (a.cursor === "custom" && Boolean(a.customCursorUrl)));
 
   useEffect(() => {
+    if (preview) return;
     document.documentElement.classList.add("ub-profile-lock");
     document.body.classList.add("ub-profile-lock");
     return () => {
       document.documentElement.classList.remove("ub-profile-lock");
       document.body.classList.remove("ub-profile-lock");
     };
-  }, []);
+  }, [preview]);
 
   const panelStyle = useMemo(
     () => ({
@@ -339,7 +351,7 @@ export function PublicProfile({
 
   return (
     <div
-      className={`relative h-dvh w-full overflow-hidden ${fontClass(a.font)}`}
+      className={`relative w-full overflow-hidden ${preview ? "h-full" : "h-dvh"} ${fontClass(a.font)}`}
       style={{
         backgroundColor: config.background.color,
         cursor: customCursorOn ? "none" : "auto",
@@ -354,27 +366,30 @@ export function PublicProfile({
         });
       }}
     >
-      <CustomCursor
-        mode={a.cursor}
-        customUrl={a.customCursorUrl}
-        color={theme}
-        size={a.cursorSize}
-        trail={a.cursorTrail}
-        trailLength={a.cursorTrailLength}
-      />
+      {!preview && (
+        <CustomCursor
+          mode={a.cursor}
+          customUrl={a.customCursorUrl}
+          color={theme}
+          size={a.cursorSize}
+          trail={a.cursorTrail}
+          trailLength={a.cursorTrailLength}
+        />
+      )}
 
       <motion.div
-        className="absolute inset-0"
+        className="absolute inset-0 overflow-hidden"
         style={{
-          backgroundImage: config.background.url
-            ? `url(${config.background.url})`
-            : config.background.gradient === "radial"
-              ? `radial-gradient(circle at 30% 20%, ${config.background.gradientColor}, ${config.background.color})`
-              : config.background.gradient === "linear"
-                ? `linear-gradient(160deg, ${config.background.gradientColor}, ${config.background.color})`
-                : config.background.gradient === "mesh"
-                  ? `radial-gradient(at 20% 20%, ${hexToRgba(config.background.gradientColor, 55)}, transparent 40%), radial-gradient(at 80% 0%, ${hexToRgba(theme, 20)}, transparent 35%), ${config.background.color}`
-                  : undefined,
+          backgroundImage:
+            config.background.url && !bgVideo
+              ? `url(${config.background.url})`
+              : config.background.gradient === "radial"
+                ? `radial-gradient(circle at 30% 20%, ${config.background.gradientColor}, ${config.background.color})`
+                : config.background.gradient === "linear"
+                  ? `linear-gradient(160deg, ${config.background.gradientColor}, ${config.background.color})`
+                  : config.background.gradient === "mesh"
+                    ? `radial-gradient(at 20% 20%, ${hexToRgba(config.background.gradientColor, 55)}, transparent 40%), radial-gradient(at 80% 0%, ${hexToRgba(theme, 20)}, transparent 35%), ${config.background.color}`
+                    : undefined,
           backgroundSize: config.background.size,
           backgroundPosition: config.background.position,
           opacity: config.background.opacity / 100,
@@ -382,18 +397,38 @@ export function PublicProfile({
           transform: `scale(${config.background.zoom / 100})`,
         }}
         animate={
-          fx.bgMotion === "drift"
-            ? { x: [0, 12, -8, 0], y: [0, -10, 6, 0] }
-            : fx.bgMotion === "zoom" || fx.bgMotion === "kenburns"
-              ? { scale: [config.background.zoom / 100, config.background.zoom / 100 + 0.06, config.background.zoom / 100] }
-              : undefined
+          preview
+            ? undefined
+            : fx.bgMotion === "drift"
+              ? { x: [0, 12, -8, 0], y: [0, -10, 6, 0] }
+              : fx.bgMotion === "zoom" || fx.bgMotion === "kenburns"
+                ? {
+                    scale: [
+                      config.background.zoom / 100,
+                      config.background.zoom / 100 + 0.06,
+                      config.background.zoom / 100,
+                    ],
+                  }
+                : undefined
         }
         transition={{
           duration: 14 - fx.bgMotionSpeed / 12,
           repeat: Infinity,
           ease: "easeInOut",
         }}
-      />
+      >
+        {bgVideo && config.background.url ? (
+          <video
+            src={config.background.url}
+            className="absolute inset-0 h-full w-full object-cover"
+            style={{ objectPosition: config.background.position }}
+            muted
+            playsInline
+            loop
+            autoPlay
+          />
+        ) : null}
+      </motion.div>
 
       {config.background.dim > 0 && (
         <div className="absolute inset-0 bg-black" style={{ opacity: config.background.dim / 100 }} />
@@ -451,18 +486,22 @@ export function PublicProfile({
         </div>
       )}
 
-      <FitViewport className="relative z-10" pad={16}>
+      <FitViewport
+        className="relative z-10"
+        pad={preview ? 8 : 16}
+        style={preview ? { height: "100%" } : undefined}
+      >
         <motion.div
-          initial={initialMap}
+          initial={preview ? false : initialMap}
           animate={enterMap}
           transition={{
-            duration: 0.5 + config.page.enterAnimationSpeed / 220,
+            duration: preview ? 0.25 : 0.5 + config.page.enterAnimationSpeed / 220,
             ease: [0.22, 1, 0.36, 1],
           }}
           className="relative flex flex-col"
           style={{
             width: boxWidth,
-            maxWidth: "92vw",
+            maxWidth: preview ? "100%" : "92vw",
             gap,
             transform: `scale(${config.layout.contentScale / 100})`,
             filter: fx.rgbSplit
@@ -492,18 +531,35 @@ export function PublicProfile({
 
             <div className="relative">
               {config.banner.url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={config.banner.url}
-                  alt=""
-                  className="w-full object-cover"
-                  style={{
-                    height: config.banner.height,
-                    opacity: config.banner.opacity / 100,
-                    objectPosition: config.banner.position,
-                    filter: `blur(${config.banner.blur}px) saturate(${config.banner.saturate}%) grayscale(${config.banner.grayscale}%)`,
-                  }}
-                />
+                bannerVideo ? (
+                  <video
+                    src={config.banner.url}
+                    className="w-full object-cover"
+                    style={{
+                      height: config.banner.height,
+                      opacity: config.banner.opacity / 100,
+                      objectPosition: config.banner.position,
+                      filter: `blur(${config.banner.blur}px) saturate(${config.banner.saturate}%) grayscale(${config.banner.grayscale}%)`,
+                    }}
+                    muted
+                    playsInline
+                    loop
+                    autoPlay
+                  />
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={config.banner.url}
+                    alt=""
+                    className="w-full object-cover"
+                    style={{
+                      height: config.banner.height,
+                      opacity: config.banner.opacity / 100,
+                      objectPosition: config.banner.position,
+                      filter: `blur(${config.banner.blur}px) saturate(${config.banner.saturate}%) grayscale(${config.banner.grayscale}%)`,
+                    }}
+                  />
+                )
               ) : (
                 <div
                   className="w-full bg-gradient-to-br from-white/14 via-white/5 to-transparent"
@@ -629,6 +685,14 @@ export function PublicProfile({
                   <VerifiedBadge size={18} />
                 )}
                 {config.options.showOwnerBadge && isOwner && <OwnerBadge size={14} />}
+                {isBlack && (
+                  <span
+                    className="inline-flex items-center gap-1 rounded-full border border-sky-300/25 bg-sky-400/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] text-sky-100/90"
+                    title="under VOID"
+                  >
+                    ◆ VOID
+                  </span>
+                )}
                 {config.options.showUid && (
                   <span className="text-xs" style={{ color: secondary }}>
                     UID {uid}

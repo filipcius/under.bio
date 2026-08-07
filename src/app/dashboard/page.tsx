@@ -4,11 +4,21 @@ import { getPageByProfileId, getProfileById, getWeeklyViews } from "@/lib/data";
 import { Icon } from "@/components/Icon";
 import { ViewsChart } from "@/components/ViewsChart";
 import { syncDiscord } from "@/app/actions/profile";
+import { getPlanByProfileId } from "@/lib/subscription";
+import { BlackCheckoutButton } from "@/components/BlackCheckoutButton";
+import { BlackDiamond } from "@/components/BlackDiamond";
+import { BLACK_NAME, BLACK_PRICE_USD } from "@/lib/plan";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ black?: string }>;
+}) {
   const session = await requireSession();
+  const sp = await searchParams;
   const profile = await getProfileById(session.user.profileId);
   const page = await getPageByProfileId(session.user.profileId);
+  const plan = await getPlanByProfileId(session.user.profileId);
 
   if (!profile || !page) {
     return (
@@ -28,7 +38,7 @@ export default async function DashboardPage() {
   const weekTotal = weekly.reduce((sum, d) => sum + d.views, 0);
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 animate-rise">
+    <div className="mx-auto max-w-4xl px-4 py-8">
       <section className="glass-card p-5 sm:p-7">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">
@@ -44,6 +54,32 @@ export default async function DashboardPage() {
             Account
           </Link>
         </div>
+
+        {sp.black && (
+          <div className="mb-5 rounded-xl border border-sky-300/30 bg-sky-400/10 px-4 py-3 text-sm text-sky-100">
+            <BlackDiamond className="mr-1" />
+            Checkout started - {BLACK_NAME} unlocks as soon as Stripe confirms payment (usually
+            seconds).
+          </div>
+        )}
+
+        {!plan.isBlack && (
+          <div className="mb-5 overflow-hidden rounded-2xl border border-sky-300/25 bg-gradient-to-r from-sky-400/[0.1] to-transparent p-4 sm:p-5">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <p className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-sky-200/80">
+                  <BlackDiamond /> under {BLACK_NAME}
+                </p>
+                <p className="mt-1 font-medium text-white">
+                  Full style lab · ${BLACK_PRICE_USD}/mo · cancel anytime
+                </p>
+              </div>
+              <div className="w-full max-w-xs sm:w-56">
+                <BlackCheckoutButton signedIn label={`Unlock ${BLACK_NAME}`} />
+              </div>
+            </div>
+          </div>
+        )}
 
         <form
           action={async () => {
