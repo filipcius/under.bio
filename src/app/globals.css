@@ -50,12 +50,35 @@
   box-shadow: none !important;
 }
 
+html {
+  scrollbar-gutter: stable;
+}
+
 html,
 body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-body);
   min-height: 100%;
+}
+
+@keyframes ub-page-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.ub-page-enter {
+  animation: ub-page-enter 0.2s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ub-page-enter {
+    animation: none;
+  }
 }
 
 /* Custom cursor modes — kill system cursor everywhere on the profile */

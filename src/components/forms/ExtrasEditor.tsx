@@ -281,9 +281,6 @@ export function ExtrasEditor({
       const next = v === id ? null : id;
       if (next) {
         window.history.replaceState(null, "", `#${next}`);
-        requestAnimationFrame(() => {
-          document.getElementById(next)?.scrollIntoView({ behavior: "smooth", block: "start" });
-        });
       } else {
         window.history.replaceState(null, "", window.location.pathname);
       }
@@ -292,14 +289,14 @@ export function ExtrasEditor({
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="w-full min-w-0 space-y-6">
       <p className="help">
         Tap a module to open it. Everything stays collapsed until you need it.
       </p>
 
       {!isBlack && <BlackUpsellBanner />}
 
-      <div className="divide-y divide-white/5 overflow-hidden rounded-xl border border-white/10">
+      <div className="w-full min-w-0 divide-y divide-white/5 overflow-x-clip rounded-xl border border-white/10">
       <ModulePanel
         id="links"
         title="Links"
@@ -336,19 +333,20 @@ export function ExtrasEditor({
             </button>
           ))}
         </div>
-        <div className="grid gap-2 sm:grid-cols-[200px_1fr_auto]">
+        <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,9.5rem)_minmax(0,1fr)_auto]">
           <SoftSelect
+            className="min-w-0"
             value={socialId}
             onChange={setSocialId}
             options={SOCIAL_PLATFORMS.map((s) => ({ value: s.id, label: s.label }))}
           />
           <input
-            className="soft-input"
+            className="soft-input min-w-0"
             placeholder={selectedSocial.placeholder}
             value={socialUrl}
             onChange={(e) => setSocialUrl(e.target.value)}
           />
-          <button type="button" className="btn btn-ghost" onClick={addSocial}>
+          <button type="button" className="btn btn-ghost shrink-0" onClick={addSocial}>
             <Icon name={selectedSocial.id} className="text-sm" />
             Add
           </button>
