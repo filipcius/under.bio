@@ -20,10 +20,22 @@ export function SaveBar({
 }) {
   const reduce = useReducedMotion();
   const [mounted, setMounted] = useState(false);
+  const [flash, setFlash] = useState<string | null>(null);
   const trackDirty = typeof dirty === "boolean";
   const showDock = trackDirty && dirty;
 
   useEffect(() => setMounted(true), []);
+
+  // Show success message briefly, then clear — never leave "Saved" forever
+  useEffect(() => {
+    if (!message || showDock) {
+      setFlash(null);
+      return;
+    }
+    setFlash(message);
+    const t = window.setTimeout(() => setFlash(null), 3200);
+    return () => window.clearTimeout(t);
+  }, [message, showDock]);
 
   const dock =
     mounted &&
@@ -41,7 +53,7 @@ export function SaveBar({
               <div className="min-w-0">
                 <p className="text-sm font-medium text-white">Unsaved changes</p>
                 <p className="truncate text-xs text-white/45">
-                  {message || "Save to publish your edits"}
+                  Save to publish your edits
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
@@ -87,22 +99,25 @@ export function SaveBar({
           <span />
         )}
         <div className="flex items-center gap-3">
-          {message && !showDock && (
-            <span className="text-sm text-white/55">{message}</span>
-          )}
+          <AnimatePresence>
+            {flash && !showDock && (
+              <motion.span
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="text-sm text-white/50"
+              >
+                {flash}
+              </motion.span>
+            )}
+          </AnimatePresence>
           <button
             type="button"
             className="btn btn-primary min-w-28"
             onClick={onSave}
             disabled={saving || (trackDirty && !dirty)}
           >
-            {saving
-              ? "Saving…"
-              : trackDirty
-                ? dirty
-                  ? "Save changes"
-                  : "Saved"
-                : "Save"}
+            {saving ? "Saving…" : "Save"}
           </button>
         </div>
       </div>
