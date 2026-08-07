@@ -354,18 +354,21 @@ export function HomeLanding() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.14 }}
-            className="mt-8 flex flex-wrap items-center justify-center gap-3"
+            className="mx-auto mt-8 flex w-full max-w-md flex-col gap-3 sm:max-w-none sm:flex-row sm:items-center sm:justify-center"
           >
             <a
               href={DISCORD_INVITE_URL}
               target="_blank"
               rel="noreferrer"
-              className="btn btn-discord px-8"
+              className="btn btn-discord !w-auto min-w-[11rem] justify-center px-8"
             >
               <Icon name="discord" className="text-sm" glow={false} />
               Join Discord
             </a>
-            <Link href="/login" className="btn btn-primary px-8">
+            <Link
+              href="/login"
+              className="btn btn-ghost min-w-[11rem] justify-center px-8"
+            >
               Sign in
             </Link>
           </motion.div>
