@@ -1,0 +1,108 @@
+{
+  "version": "1.0.0",
+  "_instructions": "Give this JSON to an AI and ask it to fill a full under.bio profile. Then import the result in Dashboard → Profile → Import JSON. All fields must match this schema exactly.",
+  "meta": {
+    "slug": "yourname",
+    "displayName": "Your Name",
+    "description": "Short bio. Line breaks allowed.",
+    "location": "City / Region",
+    "pageTitle": "yourname | under.bio",
+    "statusText": "Custom status under the mini presence card"
+  },
+  "options": {
+    "showThemeOnIcons": true,
+    "showViews": true,
+    "showUid": false,
+    "showDiscordPresence": true,
+    "showJoinDate": true,
+    "showRevealScreen": false
+  },
+  "layout": {
+    "style": "default",
+    "alignment": "left"
+  },
+  "audio": {
+    "trackPlayer": "embed",
+    "playbackMode": "loop"
+  },
+  "page": {
+    "titleAnimation": "none",
+    "titleAnimationSpeed": 50,
+    "overlay": "none",
+    "enterAnimation": "slide-up",
+    "enterAnimationSpeed": 50,
+    "revealText": "Click to enter",
+    "revealBlur": 12
+  },
+  "appearance": {
+    "themeColor": "#111111",
+    "primaryText": "#FFFFFF",
+    "secondaryText": "#A8A8A8",
+    "font": "syne",
+    "usernameSparkles": "none",
+    "avatarRadius": 50,
+    "avatarDecoration": "glow",
+    "cursor": "system",
+    "cursorTrail": "none",
+    "clickSound": "none"
+  },
+  "box": {
+    "width": 560,
+    "innerSpacing": 20,
+    "color": "#141414",
+    "opacity": 100,
+    "radius": 16,
+    "blur": 0,
+    "tilt": "none",
+    "shadowColor": "#000000",
+    "shadowOpacity": 45,
+    "borderWidth": 1,
+    "borderColor": "#FFFFFF",
+    "borderOpacity": 10,
+    "borderStyle": "solid"
+  },
+  "banner": {
+    "url": "/media/banner.jpg",
+    "opacity": 100,
+    "blur": 0
+  },
+  "background": {
+    "url": "",
+    "size": "cover",
+    "blur": 0,
+    "opacity": 100,
+    "color": "#0A0A0A"
+  },
+  "links": [
+    {
+      "label": "Discord",
+      "url": "https://discord.com/users/000000000000000000",
+      "icon": "discord"
+    },
+    {
+      "label": "Instagram",
+      "url": "https://instagram.com/you",
+      "icon": "instagram"
+    }
+  ],
+  "badges": [],
+  "tags": ["tag1", "tag2"],
+  "tracks": [
+    {
+      "title": "Artist - Track",
+      "url": "/audio/your-track.mp3",
+      "cover": "/media/track-cover.webp"
+    }
+  ],
+  "showcases": [
+    {
+      "type": "discord",
+      "title": "My Discord Server",
+      "subtitle": "",
+      "url": "https://discord.gg/invite",
+      "image": "/media/track-cover.webp",
+      "online": 7,
+      "members": 26
+    }
+  ]
+}

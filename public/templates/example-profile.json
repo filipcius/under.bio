@@ -1,0 +1,148 @@
+{
+  "version": "1.0.0",
+  "_instructions": "Dashboard → Identity → Load example JSON → Import & apply. Uses real site media files. Replace Discord invite in Modules, text, and uploads with your own. Slug stays locked to your account.",
+  "meta": {
+    "slug": "example",
+    "displayName": "filipekkk",
+    "description": "ig: ogf3llas.\nproject owner of OdraRP & undergrnd.",
+    "location": "zachodnio-pomorskie",
+    "pageTitle": "filipekkk | under.bio",
+    "statusText": "ig: ogf3llas_"
+  },
+  "options": {
+    "showThemeOnIcons": true,
+    "showViews": true,
+    "showUid": false,
+    "showDiscordPresence": true,
+    "showJoinDate": true,
+    "showRevealScreen": false,
+    "showLocation": true,
+    "showTags": true,
+    "showSocialIcons": true,
+    "showUnderBadge": true,
+    "showBadges": true,
+    "showRank": true,
+    "showVerified": true
+  },
+  "layout": {
+    "style": "default",
+    "alignment": "left",
+    "gap": 12
+  },
+  "audio": {
+    "trackPlayer": "embed",
+    "playbackMode": "loop",
+    "autoPlay": true,
+    "defaultVolume": 80,
+    "visualizer": true
+  },
+  "page": {
+    "titleAnimation": "shine",
+    "titleAnimationSpeed": 60,
+    "overlay": "vignette",
+    "enterAnimation": "slide-up",
+    "enterAnimationSpeed": 55,
+    "revealText": "Click to enter",
+    "revealBlur": 12,
+    "particles": "dust"
+  },
+  "appearance": {
+    "themeColor": "#FFFFFF",
+    "primaryText": "#FFFFFF",
+    "secondaryText": "#A8A8A8",
+    "font": "syne",
+    "usernameSparkles": "white",
+    "avatarRadius": 50,
+    "avatarDecoration": "glow",
+    "avatarSize": 76,
+    "cursor": "dot",
+    "customCursorUrl": "",
+    "cursorTrail": "none",
+    "clickSound": "none",
+    "tagStyle": "pill",
+    "iconStyle": "colored",
+    "grain": 18,
+    "accentGlow": 40,
+    "nameSize": 28
+  },
+  "box": {
+    "width": 560,
+    "innerSpacing": 20,
+    "color": "#141414",
+    "opacity": 92,
+    "radius": 18,
+    "blur": 12,
+    "tilt": "standard",
+    "shadowColor": "#000000",
+    "shadowOpacity": 45,
+    "borderWidth": 1,
+    "borderColor": "#FFFFFF",
+    "borderOpacity": 10,
+    "borderStyle": "solid",
+    "glow": true
+  },
+  "banner": {
+    "url": "/media/banner.jpg",
+    "opacity": 100,
+    "blur": 0,
+    "height": 140
+  },
+  "background": {
+    "url": "",
+    "size": "cover",
+    "blur": 0,
+    "opacity": 100,
+    "color": "#0A0A0A"
+  },
+  "links": [
+    {
+      "label": "Discord",
+      "url": "https://discord.com/users/1494801028619571221",
+      "icon": "discord"
+    },
+    {
+      "label": "Instagram",
+      "url": "https://instagram.com/ogf3llas_",
+      "icon": "instagram"
+    },
+    {
+      "label": "YouTube",
+      "url": "https://youtube.com",
+      "icon": "youtube"
+    },
+    {
+      "label": "Steam",
+      "url": "https://steamcommunity.com",
+      "icon": "steam"
+    },
+    {
+      "label": "Spotify",
+      "url": "https://open.spotify.com",
+      "icon": "spotify"
+    },
+    {
+      "label": "GitHub",
+      "url": "https://github.com",
+      "icon": "github"
+    }
+  ],
+  "badges": [
+    { "name": "Star", "icon": "star", "description": "Star" },
+    { "name": "Crown", "icon": "crown", "description": "Crown" },
+    { "name": "Fire", "icon": "fire", "description": "Fire" },
+    { "name": "Code", "icon": "code", "description": "Code" },
+    { "name": "Music", "icon": "music", "description": "Music" },
+    { "name": "Shield", "icon": "shield", "description": "Shield" },
+    { "name": "Trophy", "icon": "trophy", "description": "Trophy" },
+    { "name": "Rocket", "icon": "rocket", "description": "Rocket" }
+  ],
+  "tags": ["Web Developer", "UI/UX Designer", "odraroleplay"],
+  "tracks": [
+    {
+      "title": "macias abaddon - biale af",
+      "url": "/audio/macias-abaddon-biale-af.mp3",
+      "cover": "/media/track-cover.webp"
+    }
+  ],
+  "showcases": []
+}

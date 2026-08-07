@@ -1,0 +1,190 @@
+{
+  "version": "1.0.0",
+  "_instructions": "Dashboard → Identity → paste into Import box → Import & apply. Slug stays locked to your account. Add your Discord server invite later in Modules.",
+  "meta": {
+    "slug": "1f3llas",
+    "displayName": "filipekkk",
+    "description": "ig: ogf3llas_\nproject owner of OdraRP & undergrnd.\n\nbuilding under.bio — swag profiles only.",
+    "location": "zachodnio-pomorskie",
+    "pageTitle": "filipekkk · under.bio",
+    "statusText": "ig: ogf3llas_"
+  },
+  "options": {
+    "showThemeOnIcons": true,
+    "showViews": true,
+    "showUid": false,
+    "showDiscordPresence": true,
+    "showJoinDate": true,
+    "showRevealScreen": true,
+    "showLocation": true,
+    "showTags": true,
+    "showSocialIcons": true,
+    "showUnderBadge": true,
+    "showBadges": true,
+    "showRank": true,
+    "showVerified": true
+  },
+  "layout": {
+    "style": "default",
+    "alignment": "center",
+    "gap": 14
+  },
+  "audio": {
+    "trackPlayer": "embed",
+    "playbackMode": "loop",
+    "autoPlay": true,
+    "defaultVolume": 72,
+    "visualizer": true
+  },
+  "page": {
+    "titleAnimation": "shine",
+    "titleAnimationSpeed": 68,
+    "overlay": "vignette",
+    "enterAnimation": "zoom",
+    "enterAnimationSpeed": 62,
+    "revealText": "Click to enter",
+    "revealBlur": 16,
+    "particles": "embers"
+  },
+  "appearance": {
+    "themeColor": "#F5F5F5",
+    "primaryText": "#FFFFFF",
+    "secondaryText": "#9B9B9B",
+    "font": "syne",
+    "usernameSparkles": "theme",
+    "avatarRadius": 50,
+    "avatarDecoration": "pulse",
+    "avatarSize": 92,
+    "cursor": "dot",
+    "customCursorUrl": "",
+    "cursorTrail": "none",
+    "clickSound": "none",
+    "tagStyle": "pill",
+    "iconStyle": "colored",
+    "grain": 28,
+    "accentGlow": 55,
+    "nameSize": 34
+  },
+  "box": {
+    "width": 540,
+    "innerSpacing": 22,
+    "color": "#0E0E0E",
+    "opacity": 78,
+    "radius": 22,
+    "blur": 18,
+    "tilt": "strong",
+    "shadowColor": "#000000",
+    "shadowOpacity": 70,
+    "borderWidth": 1,
+    "borderColor": "#FFFFFF",
+    "borderOpacity": 14,
+    "borderStyle": "solid",
+    "glow": true
+  },
+  "banner": {
+    "url": "/media/banner.jpg",
+    "opacity": 100,
+    "blur": 0,
+    "height": 168
+  },
+  "background": {
+    "url": "",
+    "size": "cover",
+    "blur": 0,
+    "opacity": 100,
+    "color": "#050505"
+  },
+  "links": [
+    {
+      "label": "Discord",
+      "url": "https://discord.com/users/1494801028619571221",
+      "icon": "discord"
+    },
+    {
+      "label": "Instagram",
+      "url": "https://instagram.com/ogf3llas_",
+      "icon": "instagram"
+    },
+    {
+      "label": "TikTok",
+      "url": "https://tiktok.com/@ogf3llas_",
+      "icon": "tiktok"
+    },
+    {
+      "label": "YouTube",
+      "url": "https://youtube.com/@ogf3llas",
+      "icon": "youtube"
+    },
+    {
+      "label": "Twitch",
+      "url": "https://twitch.tv/ogf3llas",
+      "icon": "twitch"
+    },
+    {
+      "label": "Steam",
+      "url": "https://steamcommunity.com/id/ogf3llas",
+      "icon": "steam"
+    },
+    {
+      "label": "Spotify",
+      "url": "https://open.spotify.com/user/ogf3llas",
+      "icon": "spotify"
+    },
+    {
+      "label": "GitHub",
+      "url": "https://github.com/ogf3llas",
+      "icon": "github"
+    },
+    {
+      "label": "X",
+      "url": "https://x.com/ogf3llas_",
+      "icon": "x-twitter"
+    },
+    {
+      "label": "Telegram",
+      "url": "https://t.me/ogf3llas",
+      "icon": "telegram"
+    },
+    {
+      "label": "Website",
+      "url": "https://under.bio/1f3llas",
+      "icon": "link"
+    }
+  ],
+  "badges": [
+    { "name": "Crown", "icon": "crown", "description": "Owner energy" },
+    { "name": "Star", "icon": "star", "description": "Main character" },
+    { "name": "Fire", "icon": "fire", "description": "On fire" },
+    { "name": "Bolt", "icon": "bolt", "description": "Fast" },
+    { "name": "Gem", "icon": "gem", "description": "Rare" },
+    { "name": "Shield", "icon": "shield", "description": "Locked in" },
+    { "name": "Trophy", "icon": "trophy", "description": "Ranked" },
+    { "name": "Rocket", "icon": "rocket", "description": "Shipping" },
+    { "name": "Code", "icon": "code", "description": "Builder" },
+    { "name": "Music", "icon": "music", "description": "Bangers only" },
+    { "name": "Gamepad", "icon": "gamepad", "description": "Gamer" },
+    { "name": "Ghost", "icon": "ghost", "description": "Offline mode" },
+    { "name": "Skull", "icon": "skull", "description": "No mercy" },
+    { "name": "Moon", "icon": "moon", "description": "Night shift" },
+    { "name": "Palette", "icon": "palette", "description": "Design" },
+    { "name": "Key", "icon": "key", "description": "Access" },
+    { "name": "Wand", "icon": "wand", "description": "Magic" },
+    { "name": "Dragon", "icon": "dragon", "description": "Odra" },
+    { "name": "Heart", "icon": "heart", "description": "Loyal" },
+    { "name": "Gift", "icon": "gift", "description": "Drops" }
+  ],
+  "tags": [
+    "Web Developer",
+    "UI/UX Designer",
+    "OdraRP",
+    "undergrnd"
+  ],
+  "tracks": [
+    {
+      "title": "macias abaddon - biale af",
+      "url": "/audio/macias-abaddon-biale-af.mp3",
+      "cover": "/media/track-cover.webp"
+    }
+  ],
+  "showcases": []
+}
