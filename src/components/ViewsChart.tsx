@@ -11,7 +11,7 @@ import {
 
 export function ViewsChart({ data }: { data: { day: string; views: number }[] }) {
   return (
-    <div className="h-56 w-full">
+    <div className="h-full min-h-56 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data}>
           <defs>

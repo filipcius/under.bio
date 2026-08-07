@@ -81,6 +81,31 @@ body {
   }
 }
 
+@keyframes ub-vhs-track {
+  0% {
+    transform: translateY(-20%);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.55;
+  }
+  100% {
+    transform: translateY(120vh);
+    opacity: 0;
+  }
+}
+
+.ub-vhs-track {
+  animation: ub-vhs-track 7.5s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ub-vhs-track {
+    animation: none;
+    display: none;
+  }
+}
+
 /* Custom cursor modes — kill system cursor everywhere on the profile */
 html.ub-hide-cursor,
 html.ub-hide-cursor *,

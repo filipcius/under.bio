@@ -265,8 +265,33 @@ export function MiscEditor({
         <Field label="Particle color" black={!isBlack}>
           <SoftSelect value={config.page.particleColor} onChange={(particleColor) => set((c) => ({ ...c, page: { ...c.page, particleColor: particleColor as ProfileTemplate["page"]["particleColor"] } }))} onBlackLock={blackLock} options={markBlack([{ value: "white", label: "White" }, { value: "theme", label: "Theme" }, { value: "warm", label: "Warm" }, { value: "cool", label: "Cool" }], ["white"], isBlack)} />
         </Field>
-        <Field label="Overlay" black={!isBlack}>
-          <SoftSelect value={config.page.overlay} onChange={(overlay) => set((c) => ({ ...c, page: { ...c.page, overlay: overlay as ProfileTemplate["page"]["overlay"] } }))} onBlackLock={blackLock} options={markBlack([{ value: "none", label: "None" }, { value: "vignette", label: "Vignette" }, { value: "scanlines", label: "Scanlines" }, { value: "noise", label: "Noise" }, { value: "grid", label: "Grid" }, { value: "crt", label: "CRT" }, { value: "fog", label: "Fog" }, { value: "chromatic", label: "Chromatic" }, { value: "stars", label: "Stars fog" }], ["none", "vignette"], isBlack)} />
+        <Field label="Page look / overlay" black={!isBlack}>
+          <SoftSelect
+            value={config.page.overlay}
+            onChange={(overlay) =>
+              set((c) => ({
+                ...c,
+                page: { ...c.page, overlay: overlay as ProfileTemplate["page"]["overlay"] },
+              }))
+            }
+            onBlackLock={blackLock}
+            options={markBlack(
+              [
+                { value: "none", label: "None" },
+                { value: "vignette", label: "Vignette" },
+                { value: "scanlines", label: "Scanlines" },
+                { value: "noise", label: "Noise" },
+                { value: "grid", label: "Grid" },
+                { value: "crt", label: "CRT" },
+                { value: "vhs", label: "VHS" },
+                { value: "fog", label: "Fog" },
+                { value: "chromatic", label: "Chromatic" },
+                { value: "stars", label: "Stars fog" },
+              ],
+              ["none", "vignette"],
+              isBlack,
+            )}
+          />
         </Field>
         <Field label="Overlay opacity" hint={`${config.page.overlayOpacity}%`}>
           <Slider min={0} max={100} value={config.page.overlayOpacity} onChange={(overlayOpacity) => set((c) => ({ ...c, page: { ...c.page, overlayOpacity } }))} />
@@ -556,15 +581,49 @@ export function MiscEditor({
         </Field>
         <ColorField label="Gradient from" value={config.box.gradientFrom} onChange={(gradientFrom) => set((c) => ({ ...c, box: { ...c.box, gradientFrom } }))} />
         <ColorField label="Gradient to" value={config.box.gradientTo} onChange={(gradientTo) => set((c) => ({ ...c, box: { ...c.box, gradientTo } }))} />
+        <Field label="Layout border style">
+          <SoftSelect
+            value={config.box.borderStyle}
+            onChange={(borderStyle) =>
+              set((c) => ({
+                ...c,
+                box: {
+                  ...c.box,
+                  borderStyle: borderStyle as ProfileTemplate["box"]["borderStyle"],
+                },
+              }))
+            }
+            options={[
+              { value: "solid", label: "Standard (solid)" },
+              { value: "dashed", label: "Dashed" },
+              { value: "dotted", label: "Dotted" },
+              { value: "double", label: "Double" },
+              { value: "soft", label: "Soft thin" },
+              { value: "glow", label: "Glow" },
+              { value: "none", label: "None" },
+            ]}
+          />
+        </Field>
+        <ColorField
+          label="Border color"
+          value={config.box.borderColor}
+          onChange={(borderColor) => set((c) => ({ ...c, box: { ...c.box, borderColor } }))}
+        />
         <Field label="Border width" hint={`${config.box.borderWidth}px`}>
-          <Slider min={0} max={8} value={config.box.borderWidth} onChange={(borderWidth) => set((c) => ({ ...c, box: { ...c.box, borderWidth } }))} />
+          <Slider
+            min={0}
+            max={8}
+            value={config.box.borderWidth}
+            onChange={(borderWidth) => set((c) => ({ ...c, box: { ...c.box, borderWidth } }))}
+          />
         </Field>
-        <ColorField label="Border color" value={config.box.borderColor} onChange={(borderColor) => set((c) => ({ ...c, box: { ...c.box, borderColor } }))} />
         <Field label="Border opacity" hint={`${config.box.borderOpacity}%`}>
-          <Slider min={0} max={100} value={config.box.borderOpacity} onChange={(borderOpacity) => set((c) => ({ ...c, box: { ...c.box, borderOpacity } }))} />
-        </Field>
-        <Field label="Border style">
-          <SoftSelect value={config.box.borderStyle} onChange={(borderStyle) => set((c) => ({ ...c, box: { ...c.box, borderStyle: borderStyle as ProfileTemplate["box"]["borderStyle"] } }))} options={[{ value: "solid", label: "Solid" }, { value: "dashed", label: "Dashed" }, { value: "dotted", label: "Dotted" }, { value: "none", label: "None" }]} />
+          <Slider
+            min={0}
+            max={100}
+            value={config.box.borderOpacity}
+            onChange={(borderOpacity) => set((c) => ({ ...c, box: { ...c.box, borderOpacity } }))}
+          />
         </Field>
         <Field label="Soft panel glow">
           <SoftOnOff value={config.box.glow} onChange={(glow) => set((c) => ({ ...c, box: { ...c.box, glow } }))} />

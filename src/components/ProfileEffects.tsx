@@ -193,6 +193,9 @@ export function ProfileOrbs({
   );
 }
 
+const NOISE_SVG =
+  "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
+
 export function PageOverlay({
   mode,
   opacity,
@@ -202,12 +205,53 @@ export function PageOverlay({
 }) {
   if (mode === "none") return null;
   const op = opacity / 100;
+
+  if (mode === "vhs") {
+    return (
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" style={{ opacity: op }}>
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(circle at center, transparent 40%, rgba(0,0,0,0.55))",
+          }}
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "repeating-linear-gradient(0deg, rgba(255,255,255,0.045), rgba(255,255,255,0.045) 1px, transparent 2px, transparent 3px)",
+          }}
+        />
+        <div
+          className="absolute inset-0 mix-blend-overlay"
+          style={{ backgroundImage: NOISE_SVG, opacity: 0.55 }}
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+            boxShadow:
+              "inset 10px 0 28px rgba(255,0,80,0.14), inset -10px 0 28px rgba(0,200,255,0.14)",
+          }}
+        />
+        <div className="ub-vhs-track absolute inset-x-0 h-16 bg-gradient-to-b from-white/10 via-transparent to-transparent" />
+      </div>
+    );
+  }
+
   const style: React.CSSProperties = { opacity: op };
   if (mode === "vignette") {
     style.background = "radial-gradient(circle at center, transparent 35%, rgba(0,0,0,0.78))";
-  } else if (mode === "scanlines" || mode === "crt") {
+  } else if (mode === "scanlines") {
     style.background =
       "repeating-linear-gradient(0deg, rgba(255,255,255,0.035), rgba(255,255,255,0.035) 1px, transparent 2px, transparent 4px)";
+  } else if (mode === "crt") {
+    style.background = [
+      "radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.55))",
+      "repeating-linear-gradient(0deg, rgba(255,255,255,0.04), rgba(255,255,255,0.04) 1px, transparent 2px, transparent 3px)",
+    ].join(", ");
+    style.boxShadow =
+      "inset 0 0 80px rgba(0,0,0,0.45), inset 6px 0 18px rgba(255,0,80,0.08), inset -6px 0 18px rgba(0,200,255,0.08)";
   } else if (mode === "grid") {
     style.backgroundImage =
       "linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)";
@@ -221,8 +265,7 @@ export function PageOverlay({
     style.backgroundImage =
       "radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.5), transparent), radial-gradient(1px 1px at 60% 70%, rgba(255,255,255,0.35), transparent), radial-gradient(1px 1px at 80% 20%, rgba(255,255,255,0.4), transparent)";
   } else if (mode === "noise") {
-    style.backgroundImage =
-      "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
+    style.backgroundImage = NOISE_SVG;
     style.mixBlendMode = "overlay";
   }
   return <div className="pointer-events-none absolute inset-0" style={style} />;

@@ -90,6 +90,7 @@ export const profileTemplateSchema = z.object({
         "noise",
         "grid",
         "crt",
+        "vhs",
         "fog",
         "chromatic",
         "stars",
@@ -226,7 +227,9 @@ export const profileTemplateSchema = z.object({
     borderWidth: z.number().min(0).max(8).default(1),
     borderColor: hex.default("#FFFFFF"),
     borderOpacity: z.number().min(0).max(100).default(10),
-    borderStyle: z.enum(["solid", "dashed", "dotted", "none"]).default("solid"),
+    borderStyle: z
+      .enum(["solid", "dashed", "dotted", "double", "soft", "glow", "none"])
+      .default("solid"),
     glow: z.boolean().default(true),
     innerGlow: z.boolean().default(false),
     innerGlowOpacity: z.number().min(0).max(60).default(20),

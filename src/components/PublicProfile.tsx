@@ -141,15 +141,23 @@ export function PublicProfile({
     };
   }, [preview]);
 
-  const panelStyle = useMemo(
-    () => ({
+  const panelStyle = useMemo(() => {
+    const style = config.box.borderStyle;
+    const width = config.box.borderWidth;
+    const cssBorderStyle =
+      style === "soft" || style === "glow" || style === "none" ? "solid" : style;
+    const cssBorderWidth = style === "none" ? 0 : style === "soft" ? Math.max(width, 1) : width;
+    const cssBorderColor =
+      style === "soft" ? hexToRgba(config.box.borderColor, Math.max(4, config.box.borderOpacity * 0.45)) : border;
+
+    return {
       background: panelBg,
-      border: `${config.box.borderWidth}px ${config.box.borderStyle} ${border}`,
+      border: `${cssBorderWidth}px ${cssBorderStyle} ${cssBorderColor}`,
       borderRadius: config.box.radius,
       boxShadow: [
         `0 ${config.box.shadowY}px ${config.box.shadowBlur}px ${hexToRgba(config.box.shadowColor, config.box.shadowOpacity)}`,
-        config.box.glow
-          ? `0 0 ${a.accentGlow}px ${hexToRgba(theme, 25)}`
+        config.box.glow || style === "glow"
+          ? `0 0 ${Math.max(a.accentGlow, 18)}px ${hexToRgba(config.box.borderColor, style === "glow" ? Math.max(22, config.box.borderOpacity) : 25)}`
           : "",
         config.box.innerGlow
           ? `inset 0 0 40px ${hexToRgba(theme, config.box.innerGlowOpacity)}`
@@ -162,9 +170,8 @@ export function PublicProfile({
       filter: `saturate(${config.box.saturate}%)`,
       position: "relative" as const,
       overflow: "hidden" as const,
-    }),
-    [panelBg, border, config.box, primary, theme, a.accentGlow],
-  );
+    };
+  }, [panelBg, border, config.box, primary, theme, a.accentGlow]);
 
   const enterMap = {
     none: { opacity: 1, y: 0, scale: 1, rotateX: 0, filter: "blur(0px)" },
