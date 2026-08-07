@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { getPageByProfileId, getProfileBySlug } from "@/lib/data";
 import { maybeRecordPageView, getViewRank } from "@/lib/views";
 import { PublicProfile } from "@/components/PublicProfile";
-import { OWNER_DISCORD_IDS } from "@/lib/socials";
+import { OWNER_BADGE_DISCORD_IDS } from "@/lib/socials";
 import { enforceFreePlanConfig, hasBlack } from "@/lib/plan";
 import type { Metadata } from "next";
 
@@ -77,7 +77,7 @@ export default async function PublicSlugPage({
       rank={rank}
       joinedAt={profile.created_at}
       discordUsername={profile.username}
-      isOwner={OWNER_DISCORD_IDS.has(profile.discord_id)}
+      isOwner={OWNER_BADGE_DISCORD_IDS.has(profile.discord_id)}
       discordVerified={Boolean(profile.verified)}
       isBlack={black}
     />

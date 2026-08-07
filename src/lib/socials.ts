@@ -106,5 +106,11 @@ export const BADGE_PRESETS = [
   { id: "certificate", label: "Craft" },
 ] as const;
 
-/** Site owner Discord snowflake — gets Owner badge on public profiles */
+/** Site admins (dashboard /admin). Keep tight. */
 export const OWNER_DISCORD_IDS = new Set(["1494801028619571221"]);
+
+/** Public “OWNER” badge on profiles (can include co-owners without admin). */
+export const OWNER_BADGE_DISCORD_IDS = new Set([
+  ...OWNER_DISCORD_IDS,
+  "908381661224378418",
+]);
