@@ -179,11 +179,6 @@ select {
 }
 
 .soft-select-menu {
-  position: absolute;
-  z-index: 50;
-  top: calc(100% + 6px);
-  left: 0;
-  right: 0;
   margin: 0;
   padding: 0.35rem;
   list-style: none;
@@ -191,13 +186,20 @@ select {
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 14px;
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(16px);
   max-height: 240px;
   overflow-x: hidden;
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
   animation: soft-select-in 0.14s ease;
+}
+
+.soft-select-menu:not(.soft-select-menu-portal) {
+  position: absolute;
+  z-index: 50;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
 }
 
 .soft-select-menu::-webkit-scrollbar {
@@ -437,12 +439,20 @@ select {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 6px;
+  height: 22px;
   border-radius: 999px;
   outline: none;
   cursor: pointer;
   border: none;
-  overflow: hidden;
+  overflow: visible;
+  background: transparent;
+  margin: 0;
+}
+
+.ub-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border: none;
+  border-radius: 999px;
   background: linear-gradient(
     90deg,
     #f5f5f5 0%,
@@ -450,13 +460,6 @@ select {
     rgba(255, 255, 255, 0.1) var(--ub-pct, 50%),
     rgba(255, 255, 255, 0.1) 100%
   );
-}
-
-.ub-slider::-webkit-slider-runnable-track {
-  height: 6px;
-  border: none;
-  border-radius: 999px;
-  background: transparent;
 }
 
 .ub-slider::-moz-range-track {
@@ -518,6 +521,7 @@ select {
   appearance: none;
   width: 16px;
   height: 16px;
+  margin-top: -5px;
   border-radius: 999px;
   background: #fff;
   border: 2px solid #0b0b0b;

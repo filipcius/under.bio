@@ -118,8 +118,8 @@ export function MiscEditor({
   const dirty = JSON.stringify(config) !== baseline;
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,380px)] xl:items-start">
-      <div className="space-y-4">
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
+      <div className="glass-card space-y-4 p-5 sm:p-7">
       <p className="help">
         Full style lab - media, motion, effects, typography, panels, audio. Experiment hard, then
         Save. Live preview sticks on the right while you tweak.
@@ -627,8 +627,14 @@ export function MiscEditor({
       </Section>
 
       <SaveBar
+        dirty={dirty}
         saving={pending}
         message={message}
+        onReset={() => {
+          setConfig(boot);
+          setBaseline(JSON.stringify(boot));
+          setMessage(null);
+        }}
         onSave={() =>
           startTransition(async () => {
             const res = await saveProfileConfig(config);

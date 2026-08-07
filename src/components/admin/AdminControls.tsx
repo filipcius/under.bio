@@ -12,6 +12,7 @@ import {
   adminUpdateSlug,
 } from "@/app/actions/admin";
 import { BlackDiamond } from "@/components/BlackDiamond";
+import { SoftSelect } from "@/components/forms/SoftSelect";
 
 export function AdminQuickActions({
   profileId,
@@ -187,16 +188,17 @@ export function AdminUserDetailForm({
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <select
-            className="soft-input h-10 w-auto py-1 text-sm"
-            value={grantDays}
-            onChange={(e) => setGrantDays(Number(e.target.value))}
-          >
-            <option value={7}>7 days</option>
-            <option value={30}>30 days</option>
-            <option value={90}>90 days</option>
-            <option value={365}>365 days</option>
-          </select>
+          <SoftSelect
+            className="w-40"
+            value={String(grantDays)}
+            onChange={(v) => setGrantDays(Number(v))}
+            options={[
+              { value: "7", label: "7 days" },
+              { value: "30", label: "30 days" },
+              { value: "90", label: "90 days" },
+              { value: "365", label: "365 days" },
+            ]}
+          />
           <button
             type="button"
             className="btn btn-primary"

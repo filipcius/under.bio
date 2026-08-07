@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Icon } from "@/components/Icon";
 import { BlackDiamond } from "@/components/BlackDiamond";
 import { cn } from "@/lib/utils";
@@ -21,14 +22,40 @@ export function SoftSelect({
   onBlackLock?: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0, width: 0 });
   const root = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLUListElement>(null);
   const listId = useId();
   const current = options.find((o) => o.value === value) || options[0];
+
+  useEffect(() => setMounted(true), []);
+
+  useLayoutEffect(() => {
+    if (!open || !root.current) return;
+    const place = () => {
+      const r = root.current!.getBoundingClientRect();
+      setMenuPos({
+        top: r.bottom + 6,
+        left: r.left,
+        width: r.width,
+      });
+    };
+    place();
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    return () => {
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
     const close = (e: MouseEvent) => {
-      if (!root.current?.contains(e.target as Node)) setOpen(false);
+      const t = e.target as Node;
+      if (root.current?.contains(t) || menuRef.current?.contains(t)) return;
+      setOpen(false);
     };
     const esc = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
@@ -40,6 +67,55 @@ export function SoftSelect({
       window.removeEventListener("keydown", esc);
     };
   }, [open]);
+
+  const menu =
+    open && mounted
+      ? createPortal(
+          <ul
+            ref={menuRef}
+            id={listId}
+            role="listbox"
+            className="soft-select-menu soft-select-menu-portal"
+            style={{
+              position: "fixed",
+              top: menuPos.top,
+              left: menuPos.left,
+              width: menuPos.width,
+              zIndex: 80,
+            }}
+          >
+            {options.map((opt) => {
+              const active = opt.value === value;
+              return (
+                <li key={opt.value} role="option" aria-selected={active}>
+                  <button
+                    type="button"
+                    className={cn("soft-select-option", active && "is-active")}
+                    onClick={() => {
+                      if (opt.black && onBlackLock) {
+                        onBlackLock();
+                        setOpen(false);
+                        return;
+                      }
+                      onChange(opt.value);
+                      setOpen(false);
+                    }}
+                  >
+                    <span className="inline-flex items-center gap-1.5">
+                      {opt.black && <BlackDiamond />}
+                      {opt.label}
+                    </span>
+                    {active && (
+                      <Icon name="check" className="text-[10px] text-white/70" glow={false} />
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>,
+          document.body,
+        )
+      : null;
 
   return (
     <div ref={root} className={cn("relative", className)}>
@@ -67,37 +143,7 @@ export function SoftSelect({
           </svg>
         </span>
       </button>
-
-      {open && (
-        <ul id={listId} role="listbox" className="soft-select-menu">
-          {options.map((opt) => {
-            const active = opt.value === value;
-            return (
-              <li key={opt.value} role="option" aria-selected={active}>
-                <button
-                  type="button"
-                  className={cn("soft-select-option", active && "is-active")}
-                  onClick={() => {
-                    if (opt.black && onBlackLock) {
-                      onBlackLock();
-                      setOpen(false);
-                      return;
-                    }
-                    onChange(opt.value);
-                    setOpen(false);
-                  }}
-                >
-                  <span className="inline-flex items-center gap-1.5">
-                    {opt.black && <BlackDiamond />}
-                    {opt.label}
-                  </span>
-                  {active && <Icon name="check" className="text-[10px] text-white/70" glow={false} />}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+      {menu}
     </div>
   );
 }

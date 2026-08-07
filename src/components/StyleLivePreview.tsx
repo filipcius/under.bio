@@ -23,13 +23,13 @@ export function StyleLivePreview({
   const deferred = useDeferredValue(config);
 
   return (
-    <aside className="hidden xl:block">
-      <div className="sticky top-20 flex justify-center px-1">
+    <aside className="hidden xl:block xl:self-start">
+      <div className="sticky top-20 z-20 w-full max-w-[360px]">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-          className="w-full max-w-[360px] overflow-hidden rounded-2xl border border-white/10 bg-[#0c0c0c]"
+          className="overflow-hidden rounded-2xl border border-white/10 bg-[#0c0c0c] shadow-[0_20px_50px_rgba(0,0,0,0.4)]"
         >
           <div className="flex items-center justify-between border-b border-white/[0.08] px-3 py-2">
             <p className="text-[11px] text-white/50">Preview</p>

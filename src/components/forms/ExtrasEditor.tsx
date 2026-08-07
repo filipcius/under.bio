@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
 import type { ProfileTemplate } from "@/lib/profile-template";
 import { saveProfileConfig } from "@/app/actions/profile";
 import { SaveBar } from "@/components/forms/SaveBar";
@@ -68,21 +69,40 @@ function ModulePanel({
       <button
         type="button"
         className={cn(
-          "flex w-full items-center justify-between px-4 py-4 text-left transition hover:bg-white/[0.03]",
+          "flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors duration-200 hover:bg-white/[0.03]",
           open && "bg-white/[0.04]",
         )}
         onClick={onToggle}
         aria-expanded={open}
       >
-        <div>
+        <div className="min-w-0">
           <p className="font-medium">{title}</p>
-          <p className="help">{description}</p>
+          <p className="help truncate">{description}</p>
         </div>
-        <span className="text-white/40">{open ? "▾" : "→"}</span>
+        <motion.span
+          animate={{ rotate: open ? 90 : 0 }}
+          transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          className="shrink-0 text-white/40"
+        >
+          →
+        </motion.span>
       </button>
-      {open && (
-        <div className="space-y-3 border-t border-white/5 px-4 py-4">{children}</div>
-      )}
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            key="body"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden"
+          >
+            <div className="space-y-3 border-t border-white/5 px-4 py-4">
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }
@@ -105,8 +125,30 @@ export function ExtrasEditor({
   const [badgeTip, setBadgeTip] = useState("");
   const [editBadge, setEditBadge] = useState<string | null>(null);
   const [openId, setOpenId] = useState<ModuleId | null>(null);
+  const [baseline, setBaseline] = useState(() =>
+    JSON.stringify({
+      links: initial.links,
+      badges: initial.badges,
+      tags: initial.tags,
+      tracks: initial.tracks,
+      showcases: initial.showcases,
+      audio: initial.audio,
+    }),
+  );
   const router = useRouter();
   const lock = () => router.push("/black");
+  const dirty = useMemo(
+    () =>
+      JSON.stringify({
+        links: config.links,
+        badges: config.badges,
+        tags: config.tags,
+        tracks: config.tracks,
+        showcases: config.showcases,
+        audio: config.audio,
+      }) !== baseline,
+    [config, baseline],
+  );
 
   useEffect(() => {
     const hash = window.location.hash.replace("#", "") as ModuleId;
@@ -250,7 +292,7 @@ export function ExtrasEditor({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-2xl space-y-6">
       <p className="help">
         Tap a module to open it. Everything stays collapsed until you need it.
       </p>
@@ -577,19 +619,40 @@ export function ExtrasEditor({
       </div>
 
       <SaveBar
+        dirty={dirty}
         saving={pending}
         message={message}
+        onReset={() => {
+          setConfig(initial);
+          setBaseline(
+            JSON.stringify({
+              links: initial.links,
+              badges: initial.badges,
+              tags: initial.tags,
+              tracks: initial.tracks,
+              showcases: initial.showcases,
+              audio: initial.audio,
+            }),
+          );
+          setMessage(null);
+        }}
         onSave={() =>
           startTransition(async () => {
-            const res = await saveProfileConfig({
+            const payload = {
               links: config.links,
               badges: config.badges,
               tags: config.tags,
               tracks: config.tracks,
               showcases: config.showcases,
               audio: config.audio,
-            });
-            setMessage(res.ok ? res.message || "Saved." : res.error || "Failed.");
+            };
+            const res = await saveProfileConfig(payload);
+            if (res.ok) {
+              setBaseline(JSON.stringify(payload));
+              setMessage(res.message || "Saved.");
+            } else {
+              setMessage(res.error || "Failed.");
+            }
           })
         }
       />

@@ -21,6 +21,21 @@ export function DashboardShell({
     "",
   );
 
+  const header = (
+    <div className="mb-6 flex flex-wrap items-center gap-4">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={avatarUrl || "/avatar-fallback.svg"}
+        alt=""
+        className="h-16 w-16 rounded-full object-cover ring-2 ring-white/10"
+      />
+      <div className="flex flex-1 flex-wrap items-center gap-3">
+        <h1 className="section-title text-3xl sm:text-4xl">{title}</h1>
+        {actions}
+      </div>
+    </div>
+  );
+
   return (
     <div className={`mx-auto px-4 py-8 ${wide ? "max-w-7xl" : "max-w-4xl"}`}>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -44,21 +59,19 @@ export function DashboardShell({
         </div>
       </div>
 
-      <section className="glass-card p-5 sm:p-7">
-        <div className="mb-6 flex flex-wrap items-center gap-4">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={avatarUrl || "/avatar-fallback.svg"}
-            alt=""
-            className="h-16 w-16 rounded-full object-cover ring-2 ring-white/10"
-          />
-          <div className="flex flex-1 flex-wrap items-center gap-3">
-            <h1 className="section-title text-3xl sm:text-4xl">{title}</h1>
-            {actions}
-          </div>
-        </div>
-        {children}
-      </section>
+      {/* Wide layouts keep children outside glass-card so sticky preview works
+          (backdrop-filter on glass-card breaks position:sticky). */}
+      {wide ? (
+        <>
+          <section className="glass-card mb-6 p-5 sm:p-7">{header}</section>
+          {children}
+        </>
+      ) : (
+        <section className="glass-card p-5 sm:p-7">
+          {header}
+          {children}
+        </section>
+      )}
     </div>
   );
 }

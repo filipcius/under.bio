@@ -10,6 +10,7 @@ import type {
   AdminUserRow,
 } from "@/lib/admin-data";
 import { cn } from "@/lib/utils";
+import { SoftSelect } from "@/components/forms/SoftSelect";
 
 type Filter = "all" | "void" | "free" | "live" | "hidden" | "expiring";
 type Sort = "newest" | "views" | "slug" | "void";
@@ -240,18 +241,19 @@ export function AdminDashboard({
           </button>
         ))}
         <div className="ml-auto flex flex-wrap items-center gap-2">
-          <select
-            className="soft-input h-9 w-auto py-1 text-xs"
+          <SoftSelect
+            className="w-40"
             value={sort}
-            onChange={(e) => setSort(e.target.value as Sort)}
-          >
-            <option value="newest">Newest</option>
-            <option value="views">Most views</option>
-            <option value="slug">Slug A–Z</option>
-            <option value="void">VOID first</option>
-          </select>
+            onChange={(v) => setSort(v as Sort)}
+            options={[
+              { value: "newest", label: "Newest" },
+              { value: "views", label: "Most views" },
+              { value: "slug", label: "Slug A–Z" },
+              { value: "void", label: "VOID first" },
+            ]}
+          />
           <input
-            className="soft-input h-9 w-52 text-xs"
+            className="soft-input h-11 w-52 text-xs"
             placeholder="Search slug, user, discord…"
             value={q}
             onChange={(e) => setQ(e.target.value)}
