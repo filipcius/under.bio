@@ -194,7 +194,7 @@ export function ProfileOrbs({
 }
 
 const NOISE_SVG =
-  "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
+  "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E\")";
 
 export function PageOverlay({
   mode,
@@ -204,7 +204,7 @@ export function PageOverlay({
   opacity: number;
 }) {
   if (mode === "none") return null;
-  const op = opacity / 100;
+  const op = Math.min(1, Math.max(0, opacity / 100));
 
   if (mode === "vhs") {
     return (
@@ -213,62 +213,142 @@ export function PageOverlay({
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(circle at center, transparent 40%, rgba(0,0,0,0.55))",
+              "radial-gradient(ellipse at center, transparent 52%, rgba(0,0,0,0.42))",
           }}
         />
         <div
-          className="absolute inset-0"
+          className="absolute inset-0 opacity-70"
           style={{
-            background:
-              "repeating-linear-gradient(0deg, rgba(255,255,255,0.045), rgba(255,255,255,0.045) 1px, transparent 2px, transparent 3px)",
+            backgroundImage:
+              "repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 3px)",
           }}
         />
         <div
-          className="absolute inset-0 mix-blend-overlay"
-          style={{ backgroundImage: NOISE_SVG, opacity: 0.55 }}
+          className="absolute inset-0 opacity-25 mix-blend-soft-light"
+          style={{ backgroundImage: NOISE_SVG }}
         />
         <div
           className="absolute inset-0"
           style={{
             boxShadow:
-              "inset 10px 0 28px rgba(255,0,80,0.14), inset -10px 0 28px rgba(0,200,255,0.14)",
+              "inset 12px 0 40px rgba(255,40,80,0.07), inset -12px 0 40px rgba(40,180,255,0.07)",
           }}
         />
-        <div className="ub-vhs-track absolute inset-x-0 h-16 bg-gradient-to-b from-white/10 via-transparent to-transparent" />
+        <div className="ub-vhs-track absolute inset-x-0 h-10 bg-gradient-to-b from-white/[0.07] to-transparent" />
       </div>
     );
   }
 
-  const style: React.CSSProperties = { opacity: op };
-  if (mode === "vignette") {
-    style.background = "radial-gradient(circle at center, transparent 35%, rgba(0,0,0,0.78))";
-  } else if (mode === "scanlines") {
-    style.background =
-      "repeating-linear-gradient(0deg, rgba(255,255,255,0.035), rgba(255,255,255,0.035) 1px, transparent 2px, transparent 4px)";
-  } else if (mode === "crt") {
-    style.background = [
-      "radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.55))",
-      "repeating-linear-gradient(0deg, rgba(255,255,255,0.04), rgba(255,255,255,0.04) 1px, transparent 2px, transparent 3px)",
-    ].join(", ");
-    style.boxShadow =
-      "inset 0 0 80px rgba(0,0,0,0.45), inset 6px 0 18px rgba(255,0,80,0.08), inset -6px 0 18px rgba(0,200,255,0.08)";
-  } else if (mode === "grid") {
-    style.backgroundImage =
-      "linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)";
-    style.backgroundSize = "40px 40px";
-  } else if (mode === "fog") {
-    style.background =
-      "radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.08), transparent 45%), radial-gradient(ellipse at 70% 80%, rgba(255,255,255,0.05), transparent 40%)";
-  } else if (mode === "chromatic") {
-    style.boxShadow = "inset 8px 0 24px rgba(255,0,80,0.12), inset -8px 0 24px rgba(0,200,255,0.12)";
-  } else if (mode === "stars") {
-    style.backgroundImage =
-      "radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.5), transparent), radial-gradient(1px 1px at 60% 70%, rgba(255,255,255,0.35), transparent), radial-gradient(1px 1px at 80% 20%, rgba(255,255,255,0.4), transparent)";
-  } else if (mode === "noise") {
-    style.backgroundImage = NOISE_SVG;
-    style.mixBlendMode = "overlay";
+  if (mode === "crt") {
+    return (
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" style={{ opacity: op }}>
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse at center, transparent 58%, rgba(0,0,0,0.5))",
+          }}
+        />
+        <div
+          className="absolute inset-0 opacity-60"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 4px)",
+          }}
+        />
+      </div>
+    );
   }
-  return <div className="pointer-events-none absolute inset-0" style={style} />;
+
+  if (mode === "scanlines") {
+    return (
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          opacity: op * 0.85,
+          backgroundImage:
+            "repeating-linear-gradient(0deg, rgba(255,255,255,0.028) 0 1px, transparent 1px 4px)",
+        }}
+      />
+    );
+  }
+
+  if (mode === "vignette") {
+    return (
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          opacity: op,
+          background:
+            "radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,0.62))",
+        }}
+      />
+    );
+  }
+
+  if (mode === "fog") {
+    return (
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          opacity: op * 0.9,
+          background:
+            "radial-gradient(ellipse at 25% 15%, rgba(255,255,255,0.06), transparent 42%), radial-gradient(ellipse at 78% 85%, rgba(255,255,255,0.04), transparent 38%)",
+        }}
+      />
+    );
+  }
+
+  if (mode === "chromatic") {
+    return (
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          opacity: op,
+          boxShadow:
+            "inset 14px 0 36px rgba(255,50,90,0.08), inset -14px 0 36px rgba(40,190,255,0.08)",
+        }}
+      />
+    );
+  }
+
+  if (mode === "grid") {
+    return (
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          opacity: op * 0.75,
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
+          backgroundSize: "48px 48px",
+        }}
+      />
+    );
+  }
+
+  if (mode === "stars") {
+    return (
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          opacity: op,
+          backgroundImage:
+            "radial-gradient(1px 1px at 12% 22%, rgba(255,255,255,0.45), transparent), radial-gradient(1px 1px at 38% 64%, rgba(255,255,255,0.28), transparent), radial-gradient(1px 1px at 72% 18%, rgba(255,255,255,0.35), transparent), radial-gradient(1.2px 1.2px at 86% 70%, rgba(255,255,255,0.3), transparent), radial-gradient(1px 1px at 54% 40%, rgba(255,255,255,0.22), transparent)",
+        }}
+      />
+    );
+  }
+
+  if (mode === "noise") {
+    return (
+      <div
+        className="pointer-events-none absolute inset-0 mix-blend-soft-light"
+        style={{ opacity: op * 0.45, backgroundImage: NOISE_SVG }}
+      />
+    );
+  }
+
+  return null;
 }
 
 export function BoxPattern({

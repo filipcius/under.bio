@@ -7,6 +7,7 @@ import { hexToRgba } from "@/lib/utils";
 import { Icon } from "@/components/Icon";
 import { TrackPlayer } from "@/components/TrackPlayer";
 import { TiltPanel } from "@/components/TiltPanel";
+import { buildPanelChrome } from "@/lib/panel-chrome";
 import { DiscordShowcase } from "@/components/DiscordShowcase";
 import { AnimatedName } from "@/components/AnimatedName";
 import { OwnerBadge, VerifiedBadge } from "@/components/VerifiedBadge";
@@ -113,9 +114,6 @@ export function PublicProfile({
   const secondary = config.appearance.secondaryText;
   const theme = config.appearance.themeColor;
   const border = hexToRgba(config.box.borderColor, config.box.borderOpacity);
-  const panelBg = config.box.gradientFill
-    ? `linear-gradient(160deg, ${hexToRgba(config.box.gradientFrom, config.box.opacity)}, ${hexToRgba(config.box.gradientTo, config.box.opacity)})`
-    : hexToRgba(config.box.color, config.box.opacity);
   const tiltEnabled = !preview && config.box.tilt !== "none";
   const tiltStrength = tiltStrengthOf(config.box.tilt);
   const gap = config.layout.compact ? Math.min(config.layout.gap, 8) : config.layout.gap;
@@ -141,37 +139,17 @@ export function PublicProfile({
     };
   }, [preview]);
 
-  const panelStyle = useMemo(() => {
-    const style = config.box.borderStyle;
-    const width = config.box.borderWidth;
-    const cssBorderStyle =
-      style === "soft" || style === "glow" || style === "none" ? "solid" : style;
-    const cssBorderWidth = style === "none" ? 0 : style === "soft" ? Math.max(width, 1) : width;
-    const cssBorderColor =
-      style === "soft" ? hexToRgba(config.box.borderColor, Math.max(4, config.box.borderOpacity * 0.45)) : border;
+  const { style: panelStyle, borderAttr } = useMemo(
+    () =>
+      buildPanelChrome(config.box, {
+        primary,
+        theme,
+        accentGlow: a.accentGlow,
+      }),
+    [config.box, primary, theme, a.accentGlow],
+  );
 
-    return {
-      background: panelBg,
-      border: `${cssBorderWidth}px ${cssBorderStyle} ${cssBorderColor}`,
-      borderRadius: config.box.radius,
-      boxShadow: [
-        `0 ${config.box.shadowY}px ${config.box.shadowBlur}px ${hexToRgba(config.box.shadowColor, config.box.shadowOpacity)}`,
-        config.box.glow || style === "glow"
-          ? `0 0 ${Math.max(a.accentGlow, 18)}px ${hexToRgba(config.box.borderColor, style === "glow" ? Math.max(22, config.box.borderOpacity) : 25)}`
-          : "",
-        config.box.innerGlow
-          ? `inset 0 0 40px ${hexToRgba(theme, config.box.innerGlowOpacity)}`
-          : "",
-      ]
-        .filter(Boolean)
-        .join(", "),
-      color: primary,
-      backdropFilter: config.box.blur ? `blur(${config.box.blur}px)` : undefined,
-      filter: `saturate(${config.box.saturate}%)`,
-      position: "relative" as const,
-      overflow: "hidden" as const,
-    };
-  }, [panelBg, border, config.box, primary, theme, a.accentGlow]);
+  const panelClass = `ub-panel ub-panel--${borderAttr}${fx.borderAnimate ? " ub-border-animate" : ""}`;
 
   const enterMap = {
     none: { opacity: 1, y: 0, scale: 1, rotateX: 0, filter: "blur(0px)" },
@@ -522,8 +500,8 @@ export function PublicProfile({
             enabled={tiltEnabled}
             strength={tiltStrength}
             hoverScale={config.box.tiltScale / 100}
-            style={panelStyle}
-            className={`relative ${fx.borderAnimate ? "ub-border-animate" : ""}`}
+            style={{ ...panelStyle, filter: `saturate(${config.box.saturate}%)` }}
+            className={panelClass}
           >
             <BoxPattern pattern={config.box.pattern} opacity={config.box.patternOpacity} />
             {fx.cardSheen && <div className="pointer-events-none absolute inset-0 ub-card-sheen" />}
@@ -786,10 +764,14 @@ export function PublicProfile({
             <TiltPanel
               enabled={tiltEnabled}
               strength={tiltStrength * 0.7}
-              style={panelStyle}
+              style={
+                config.layout.presenceStyle === "minimal"
+                  ? { background: "transparent", boxShadow: "none", border: "none" }
+                  : panelStyle
+              }
               className={`flex items-center justify-between gap-3 px-3 py-2.5 ${
-                config.layout.presenceStyle === "pill" ? "!rounded-full" : ""
-              } ${config.layout.presenceStyle === "minimal" ? "!border-0 !bg-transparent !shadow-none" : ""}`}
+                config.layout.presenceStyle === "minimal" ? "" : panelClass
+              } ${config.layout.presenceStyle === "pill" ? "!rounded-full" : ""}`}
             >
               <div className="flex min-w-0 items-center gap-2.5">
                 <div className="relative">
@@ -849,6 +831,7 @@ export function PublicProfile({
                     inviteUrl: item.url || `https://discord.gg/${item.inviteCode}`,
                   }}
                   panelStyle={panelStyle}
+                  panelClass={panelClass}
                   secondary={secondary}
                 />
               </TiltPanel>
@@ -870,6 +853,8 @@ export function PublicProfile({
                   primary={primary}
                   secondary={secondary}
                   border={border}
+                  panelStyle={panelStyle}
+                  panelClass={panelClass}
                   silent={preview}
                 />
               </TiltPanel>

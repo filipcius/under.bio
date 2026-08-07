@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { motion } from "framer-motion";
 import { Icon } from "@/components/Icon";
 import { Slider } from "@/components/forms/Slider";
@@ -23,6 +23,8 @@ export function TrackPlayer({
   primary,
   secondary,
   border,
+  panelStyle,
+  panelClass,
   silent = false,
 }: {
   title: string;
@@ -35,6 +37,8 @@ export function TrackPlayer({
   primary: string;
   secondary: string;
   border: string;
+  panelStyle?: CSSProperties;
+  panelClass?: string;
   /** Preview / editor mode — never load or play audio */
   silent?: boolean;
 }) {
@@ -193,12 +197,15 @@ export function TrackPlayer({
 
   return (
     <div
-      className="overflow-hidden rounded-2xl border"
-      style={{
-        borderColor: border,
-        background:
-          "linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)), #121212",
-      }}
+      className={panelClass || "ub-panel overflow-hidden rounded-2xl"}
+      style={
+        panelStyle || {
+          borderColor: border,
+          background:
+            "linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)), #121212",
+          borderRadius: 16,
+        }
+      }
     >
       <div className="flex items-stretch">
         <div className="relative w-[88px] shrink-0 sm:w-[104px]">

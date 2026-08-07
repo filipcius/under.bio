@@ -15,11 +15,13 @@ export function DiscordShowcase({
   inviteCode,
   fallback,
   panelStyle,
+  panelClass,
   secondary,
 }: {
   inviteCode: string;
   fallback?: Partial<Live>;
   panelStyle: React.CSSProperties;
+  panelClass?: string;
   secondary: string;
 }) {
   const [live, setLive] = useState<Live>({
@@ -65,7 +67,7 @@ export function DiscordShowcase({
   }, [inviteCode]);
 
   return (
-    <div style={panelStyle} className="flex items-center gap-3 px-3 py-3">
+    <div style={panelStyle} className={`flex items-center gap-3 px-3 py-3 ${panelClass || "ub-panel"}`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={live.image}

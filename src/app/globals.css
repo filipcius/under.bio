@@ -711,7 +711,63 @@ select {
   animation: shine-move 3.5s linear infinite;
 }
 
+/* Layout panel border ring — paints ABOVE banner/content so style changes are visible */
+.ub-panel {
+  position: relative;
+}
+
+.ub-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 30;
+  box-sizing: border-box;
+  border-width: var(--ub-bw, 1px);
+  border-style: solid;
+  border-color: var(--ub-bc, rgba(255, 255, 255, 0.12));
+}
+
+.ub-panel--none::after {
+  display: none;
+}
+
+.ub-panel--solid::after {
+  border-style: solid;
+}
+
+.ub-panel--dashed::after {
+  border-style: dashed;
+  border-width: max(2px, var(--ub-bw, 2px));
+}
+
+.ub-panel--dotted::after {
+  border-style: dotted;
+  border-width: max(2px, var(--ub-bw, 2px));
+}
+
+.ub-panel--double::after {
+  border-style: double;
+  border-width: max(3px, var(--ub-bw, 3px));
+}
+
+.ub-panel--soft::after {
+  border-style: solid;
+  border-width: max(1px, var(--ub-bw, 1px));
+}
+
+.ub-panel--glow::after {
+  border-style: solid;
+  box-shadow: 0 0 18px var(--ub-bc, rgba(255, 255, 255, 0.35));
+}
+
+.ub-border-animate::after {
+  display: none;
+}
+
 .ub-border-animate {
+  border: 1px solid transparent !important;
   background-image: linear-gradient(#0e0e0e, #0e0e0e),
     conic-gradient(from var(--ub-angle, 0deg), transparent, #fff, transparent 30%);
   background-origin: border-box;

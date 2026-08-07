@@ -617,7 +617,10 @@ export function MiscEditor({
             onChange={(borderWidth) => set((c) => ({ ...c, box: { ...c.box, borderWidth } }))}
           />
         </Field>
-        <Field label="Border opacity" hint={`${config.box.borderOpacity}%`}>
+        <Field
+          label="Border opacity"
+          hint={`${config.box.borderOpacity}% · tip: 35–70% reads best`}
+        >
           <Slider
             min={0}
             max={100}
