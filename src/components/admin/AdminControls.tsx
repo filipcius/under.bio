@@ -35,18 +35,18 @@ export function AdminQuickActions({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-1.5">
       <button
         type="button"
-        className="btn btn-ghost text-xs"
+        className="btn btn-ghost px-2 text-[11px]"
         disabled={pending}
         onClick={() => run(() => adminSetPublished(profileId, !published))}
       >
-        {published ? "Unpublish" : "Publish"}
+        {published ? "Hide" : "Publish"}
       </button>
       <button
         type="button"
-        className="btn btn-ghost text-xs"
+        className="btn btn-ghost px-2 text-[11px]"
         disabled={pending}
         onClick={() =>
           run(() =>
@@ -57,12 +57,12 @@ export function AdminQuickActions({
         }
       >
         <BlackDiamond />
-        {isBlack ? "Revoke VOID" : "VOID · 1 mo"}
+        {isBlack ? "Revoke" : "1 mo"}
       </button>
       {isBlack && (
         <button
           type="button"
-          className="btn btn-ghost text-xs"
+          className="btn btn-ghost px-2 text-[11px]"
           disabled={pending}
           onClick={() => run(() => adminSetPlan(profileId, "black", 30))}
           title="Extend VOID by another month"
@@ -70,7 +70,7 @@ export function AdminQuickActions({
           +1 mo
         </button>
       )}
-      {msg && <span className="text-xs text-white/45">{msg}</span>}
+      {msg && <span className="basis-full text-[10px] text-white/40">{msg}</span>}
     </div>
   );
 }
@@ -82,6 +82,8 @@ export function AdminUserDetailForm({
   isBlack,
   totalViews,
   configJson,
+  periodEnd,
+  planStatus,
 }: {
   profileId: string;
   slug: string;
@@ -89,10 +91,13 @@ export function AdminUserDetailForm({
   isBlack: boolean;
   totalViews: number;
   configJson: string;
+  periodEnd?: string | null;
+  planStatus?: string | null;
 }) {
   const [slugVal, setSlug] = useState(slug);
   const [views, setViews] = useState(String(totalViews));
   const [json, setJson] = useState(configJson);
+  const [grantDays, setGrantDays] = useState(30);
   const [msg, setMsg] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const router = useRouter();
@@ -106,123 +111,160 @@ export function AdminUserDetailForm({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {msg && (
         <p className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white/70">
           {msg}
         </p>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <div className="label">
-            <span>Slug</span>
+      <section className="space-y-3">
+        <h3 className="text-xs uppercase tracking-[0.18em] text-white/40">
+          Identity
+        </h3>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <div className="label">
+              <span>Slug</span>
+            </div>
+            <div className="flex gap-2">
+              <input
+                className="soft-input"
+                value={slugVal}
+                onChange={(e) => setSlug(e.target.value)}
+              />
+              <button
+                type="button"
+                className="btn btn-ghost shrink-0"
+                disabled={pending}
+                onClick={() => run(() => adminUpdateSlug(profileId, slugVal))}
+              >
+                Save
+              </button>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <input
-              className="soft-input"
-              value={slugVal}
-              onChange={(e) => setSlug(e.target.value)}
-            />
-            <button
-              type="button"
-              className="btn btn-ghost shrink-0"
-              disabled={pending}
-              onClick={() => run(() => adminUpdateSlug(profileId, slugVal))}
-            >
-              Save
-            </button>
+          <div>
+            <div className="label">
+              <span>Total views</span>
+            </div>
+            <div className="flex gap-2">
+              <input
+                className="soft-input"
+                value={views}
+                onChange={(e) => setViews(e.target.value)}
+                inputMode="numeric"
+              />
+              <button
+                type="button"
+                className="btn btn-ghost shrink-0"
+                disabled={pending}
+                onClick={() => run(() => adminSetViews(profileId, Number(views)))}
+              >
+                Save
+              </button>
+            </div>
           </div>
         </div>
-        <div>
-          <div className="label">
-            <span>Total views</span>
-          </div>
-          <div className="flex gap-2">
-            <input
-              className="soft-input"
-              value={views}
-              onChange={(e) => setViews(e.target.value)}
-              inputMode="numeric"
-            />
-            <button
-              type="button"
-              className="btn btn-ghost shrink-0"
-              disabled={pending}
-              onClick={() => run(() => adminSetViews(profileId, Number(views)))}
-            >
-              Save
-            </button>
-          </div>
-        </div>
-      </div>
+      </section>
 
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          className="btn btn-ghost"
-          disabled={pending}
-          onClick={() => run(() => adminSetPublished(profileId, !published))}
-        >
-          {published ? "Unpublish page" : "Publish page"}
-        </button>
-        <button
-          type="button"
-          className="btn btn-primary"
-          disabled={pending}
-          onClick={() =>
-            run(() =>
-              isBlack
-                ? adminSetPlan(profileId, "free")
-                : adminSetPlan(profileId, "black", 30),
-            )
-          }
-        >
-          <BlackDiamond />
-          {isBlack ? "Revoke VOID" : "Grant VOID · 1 month"}
-        </button>
-        {isBlack && (
+      <section className="space-y-3">
+        <h3 className="text-xs uppercase tracking-[0.18em] text-white/40">
+          Plan · VOID
+        </h3>
+        <div className="rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 text-sm">
+          <p>
+            Status:{" "}
+            <span className="text-white/80">
+              {isBlack ? "VOID active" : "Free"}
+            </span>
+            {planStatus ? (
+              <span className="text-white/40"> · {planStatus}</span>
+            ) : null}
+          </p>
+          <p className="mt-1 text-white/50">
+            Period end:{" "}
+            {periodEnd ? new Date(periodEnd).toLocaleString() : "—"}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            className="soft-input h-10 w-auto py-1 text-sm"
+            value={grantDays}
+            onChange={(e) => setGrantDays(Number(e.target.value))}
+          >
+            <option value={7}>7 days</option>
+            <option value={30}>30 days</option>
+            <option value={90}>90 days</option>
+            <option value={365}>365 days</option>
+          </select>
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={pending}
+            onClick={() => run(() => adminSetPlan(profileId, "black", grantDays))}
+          >
+            <BlackDiamond />
+            {isBlack ? `Extend +${grantDays}d` : `Grant VOID · ${grantDays}d`}
+          </button>
+          {isBlack && (
+            <button
+              type="button"
+              className="btn btn-ghost"
+              disabled={pending}
+              onClick={() => run(() => adminSetPlan(profileId, "free"))}
+            >
+              Revoke VOID
+            </button>
+          )}
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <h3 className="text-xs uppercase tracking-[0.18em] text-white/40">
+          Page
+        </h3>
+        <div className="flex flex-wrap gap-2">
           <button
             type="button"
             className="btn btn-ghost"
             disabled={pending}
-            onClick={() => run(() => adminSetPlan(profileId, "black", 30))}
+            onClick={() => run(() => adminSetPublished(profileId, !published))}
           >
-            <BlackDiamond /> Extend +1 month
+            {published ? "Unpublish page" : "Publish page"}
           </button>
-        )}
-        <button
-          type="button"
-          className="btn btn-ghost"
-          disabled={pending}
-          onClick={() => run(() => adminResetConfig(profileId))}
-        >
-          Reset config
-        </button>
-        <button
-          type="button"
-          className="btn btn-danger"
-          disabled={pending}
-          onClick={() => {
-            const typed = window.prompt(
-              "This permanently deletes the user + page. Type DELETE to confirm.",
-            );
-            if (typed !== "DELETE") {
-              setMsg("Delete canceled.");
-              return;
-            }
-            run(async () => {
-              const res = await adminDeleteUser(profileId, "DELETE");
-              if (res.ok) router.push("/admin");
-              return res;
-            });
-          }}
-        >
-          Delete user
-        </button>
-      </div>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            disabled={pending}
+            onClick={() => run(() => adminResetConfig(profileId))}
+          >
+            Reset config
+          </button>
+          <button
+            type="button"
+            className="btn btn-danger"
+            disabled={pending}
+            onClick={() => {
+              const typed = window.prompt(
+                "This permanently deletes the user + page. Type DELETE to confirm.",
+              );
+              if (typed !== "DELETE") {
+                setMsg("Delete canceled.");
+                return;
+              }
+              run(async () => {
+                const res = await adminDeleteUser(profileId, "DELETE");
+                if (res.ok) router.push("/admin");
+                return res;
+              });
+            }}
+          >
+            Delete user
+          </button>
+        </div>
+      </section>
 
-      <div>
+      <section>
         <div className="label">
           <span>Page config JSON</span>
         </div>
@@ -240,7 +282,7 @@ export function AdminUserDetailForm({
         >
           Save config
         </button>
-      </div>
+      </section>
     </div>
   );
 }

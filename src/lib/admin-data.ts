@@ -26,10 +26,57 @@ export type AdminUserRow = {
   page_id: string | null;
 };
 
-export async function getAdminStats() {
+export type AdminStats = {
+  users: number;
+  published: number;
+  unpublished: number;
+  totalViews: number;
+  black: number;
+  free: number;
+  joinedWeek: number;
+  joinedDay: number;
+  expiringSoon: number;
+  avgViews: number;
+};
+
+export type AdminAuditRow = {
+  id: string;
+  action: string;
+  actor_discord_id: string;
+  target_profile_id: string | null;
+  meta: Record<string, unknown>;
+  created_at: string;
+};
+
+export async function getAdminStats(): Promise<AdminStats> {
+  const empty: AdminStats = {
+    users: 0,
+    published: 0,
+    unpublished: 0,
+    totalViews: 0,
+    black: 0,
+    free: 0,
+    joinedWeek: 0,
+    joinedDay: 0,
+    expiringSoon: 0,
+    avgViews: 0,
+  };
   const admin = createAdminClient();
   try {
-    const [{ count: users }, pagesRes, blackRes] = await Promise.all([
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const soon = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const now = new Date().toISOString();
+
+    const [
+      { count: users },
+      pagesRes,
+      blackRes,
+      weekRes,
+      dayRes,
+      expireRes,
+      profilesRes,
+    ] = await Promise.all([
       admin.from("profiles").select("id", { count: "exact", head: true }),
       admin.from("pages").select("total_views, published"),
       admin
@@ -37,6 +84,21 @@ export async function getAdminStats() {
         .select("id", { count: "exact", head: true })
         .eq("plan", "black")
         .in("plan_status", ["active", "trialing", "past_due"]),
+      admin
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .gte("created_at", weekAgo),
+      admin
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .gte("created_at", dayAgo),
+      admin
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .eq("plan", "black")
+        .gte("plan_period_end", now)
+        .lte("plan_period_end", soon),
+      admin.from("profiles").select("plan, plan_status, plan_period_end"),
     ]);
 
     const pages = (pagesRes.data ?? []) as {
@@ -45,32 +107,110 @@ export async function getAdminStats() {
     }[];
     const totalViews = pages.reduce((s, p) => s + (p.total_views || 0), 0);
     const published = pages.filter((p) => p.published).length;
+    const userCount = users ?? 0;
+
+    let black = 0;
+    for (const p of (profilesRes.data ?? []) as {
+      plan: string | null;
+      plan_status: string | null;
+      plan_period_end: string | null;
+    }[]) {
+      if (hasBlack(p.plan, p.plan_status, p.plan_period_end)) black += 1;
+    }
 
     return {
-      users: users ?? 0,
+      users: userCount,
       published,
       unpublished: pages.length - published,
       totalViews,
-      black: blackRes.count ?? 0,
+      black: black || blackRes.count || 0,
+      free: Math.max(0, userCount - (black || blackRes.count || 0)),
+      joinedWeek: weekRes.count ?? 0,
+      joinedDay: dayRes.count ?? 0,
+      expiringSoon: expireRes.count ?? 0,
+      avgViews: pages.length ? Math.round(totalViews / pages.length) : 0,
     };
   } catch (err) {
     console.error("[admin:stats]", err);
-    const [{ count: users }, pagesRes] = await Promise.all([
-      admin.from("profiles").select("id", { count: "exact", head: true }),
-      admin.from("pages").select("total_views, published"),
-    ]);
-    const pages = (pagesRes.data ?? []) as {
-      total_views: number;
-      published: boolean;
-    }[];
-    return {
-      users: users ?? 0,
-      published: pages.filter((p) => p.published).length,
-      unpublished: pages.filter((p) => !p.published).length,
-      totalViews: pages.reduce((s, p) => s + (p.total_views || 0), 0),
-      black: 0,
-    };
+    return empty;
   }
+}
+
+export async function getAdminAudit(limit = 40): Promise<AdminAuditRow[]> {
+  try {
+    const admin = createAdminClient();
+    const { data, error } = await admin
+      .from("admin_audit_log")
+      .select("id, action, actor_discord_id, target_profile_id, meta, created_at")
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (error) {
+      console.warn("[admin:audit]", error.message);
+      return [];
+    }
+    return (data ?? []) as AdminAuditRow[];
+  } catch {
+    return [];
+  }
+}
+
+export async function getTopViewedProfiles(limit = 8): Promise<
+  Array<{
+    profile_id: string;
+    slug: string;
+    username: string;
+    global_name: string | null;
+    avatar_url: string | null;
+    total_views: number;
+  }>
+> {
+  const admin = createAdminClient();
+  const { data: pages } = await admin
+    .from("pages")
+    .select("profile_id, total_views")
+    .order("total_views", { ascending: false })
+    .limit(limit);
+  const rows = (pages ?? []) as { profile_id: string; total_views: number }[];
+  if (!rows.length) return [];
+
+  const ids = rows.map((r) => r.profile_id);
+  const { data: profiles } = await admin
+    .from("profiles")
+    .select("id, slug, username, global_name, avatar_url")
+    .in("id", ids);
+  const byId = new Map(
+    (
+      (profiles ?? []) as Array<{
+        id: string;
+        slug: string;
+        username: string;
+        global_name: string | null;
+        avatar_url: string | null;
+      }>
+    ).map((p) => [p.id, p]),
+  );
+
+  return rows
+    .map((r) => {
+      const p = byId.get(r.profile_id);
+      if (!p) return null;
+      return {
+        profile_id: r.profile_id,
+        slug: p.slug,
+        username: p.username,
+        global_name: p.global_name,
+        avatar_url: p.avatar_url,
+        total_views: r.total_views,
+      };
+    })
+    .filter(Boolean) as Array<{
+    profile_id: string;
+    slug: string;
+    username: string;
+    global_name: string | null;
+    avatar_url: string | null;
+    total_views: number;
+  }>;
 }
 
 export async function listAdminUsers(q?: string): Promise<AdminUserRow[]> {
