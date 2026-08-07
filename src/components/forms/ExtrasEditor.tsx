@@ -97,7 +97,7 @@ function ModulePanel({
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
             className="overflow-hidden"
           >
-            <div className="space-y-3 border-t border-white/5 px-4 py-4">
+            <div className="min-w-0 space-y-3 break-words border-t border-white/5 px-4 py-4">
               {children}
             </div>
           </motion.div>
@@ -289,14 +289,14 @@ export function ExtrasEditor({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="w-full min-w-0 space-y-6">
       <p className="help">
         Tap a module to open it. Everything stays collapsed until you need it.
       </p>
 
       {!isBlack && <BlackUpsellBanner />}
 
-      <div className="divide-y divide-white/5 overflow-hidden rounded-xl border border-white/10">
+      <div className="w-full min-w-0 divide-y divide-white/5 overflow-hidden rounded-xl border border-white/10">
       <ModulePanel
         id="links"
         title={MODULES[0].title}

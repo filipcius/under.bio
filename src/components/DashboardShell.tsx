@@ -37,7 +37,9 @@ export function DashboardShell({
   );
 
   return (
-    <div className={`mx-auto px-4 py-8 ${wide ? "max-w-7xl" : "max-w-4xl"}`}>
+    <div
+      className={`mx-auto w-full min-w-0 px-4 py-8 ${wide ? "max-w-7xl" : "max-w-4xl"}`}
+    >
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <Link href="/dashboard" className="btn btn-ghost text-sm">
           <Icon name="arrowLeft" className="text-xs" />
@@ -63,13 +65,13 @@ export function DashboardShell({
           (backdrop-filter on glass-card breaks position:sticky). */}
       {wide ? (
         <>
-          <section className="glass-card mb-6 p-5 sm:p-7">{header}</section>
-          {children}
+          <section className="glass-card mb-6 w-full p-5 sm:p-7">{header}</section>
+          <div className="w-full min-w-0">{children}</div>
         </>
       ) : (
-        <section className="glass-card p-5 sm:p-7">
+        <section className="glass-card w-full p-5 sm:p-7">
           {header}
-          {children}
+          <div className="w-full min-w-0">{children}</div>
         </section>
       )}
     </div>
