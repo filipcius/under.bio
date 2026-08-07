@@ -585,7 +585,8 @@ export function PublicProfile({
                 )}
               </div>
 
-              <motion.div
+              {/* Outer: position only — Framer transform must not override centering */}
+              <div
                 className="absolute"
                 style={{
                   bottom: -a.avatarSize / 2.4 + a.avatarOffsetY,
@@ -593,60 +594,63 @@ export function PublicProfile({
                   right: avatarSide === "right" ? 16 : "auto",
                   transform: avatarSide === "center" ? "translateX(-50%)" : undefined,
                 }}
-                animate={
-                  a.avatarDecoration === "glow" ||
-                  a.avatarDecoration === "pulse" ||
-                  a.avatarDecoration === "square-glow"
-                    ? {
-                        y: [0, -3, 0],
-                        filter: [
-                          `drop-shadow(0 0 8px ${hexToRgba(theme, 30)})`,
-                          `drop-shadow(0 0 22px ${hexToRgba(theme, 55)})`,
-                          `drop-shadow(0 0 8px ${hexToRgba(theme, 30)})`,
-                        ],
-                      }
-                    : a.avatarDecoration === "ring"
-                      ? { rotate: [0, 2, -2, 0] }
-                      : undefined
-                }
-                transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
               >
-                {(a.avatarDecoration === "spin-ring" ||
-                  a.avatarDecoration === "glow" ||
-                  a.avatarDecoration === "hex") && (
-                  <div
-                    className="absolute -inset-1 opacity-80"
+                <motion.div
+                  animate={
+                    a.avatarDecoration === "glow" ||
+                    a.avatarDecoration === "pulse" ||
+                    a.avatarDecoration === "square-glow"
+                      ? {
+                          y: [0, -3, 0],
+                          filter: [
+                            `drop-shadow(0 0 8px ${hexToRgba(theme, 30)})`,
+                            `drop-shadow(0 0 22px ${hexToRgba(theme, 55)})`,
+                            `drop-shadow(0 0 8px ${hexToRgba(theme, 30)})`,
+                          ],
+                        }
+                      : a.avatarDecoration === "ring"
+                        ? { rotate: [0, 2, -2, 0] }
+                        : undefined
+                  }
+                  transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  {(a.avatarDecoration === "spin-ring" ||
+                    a.avatarDecoration === "glow" ||
+                    a.avatarDecoration === "hex") && (
+                    <div
+                      className="absolute -inset-1 opacity-80"
+                      style={{
+                        background: `conic-gradient(from 180deg, ${hexToRgba(theme, 0)}, ${hexToRgba(theme, 70)}, ${hexToRgba(theme, 0)})`,
+                        borderRadius:
+                          a.avatarDecoration === "hex" ? "18%" : `${a.avatarRadius}%`,
+                        animation:
+                          a.avatarDecoration === "spin-ring"
+                            ? "spin 6s linear infinite"
+                            : undefined,
+                      }}
+                    />
+                  )}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={avatarUrl || "/avatar-fallback.svg"}
+                    alt=""
+                    className="relative object-cover ring-4 ring-[#0e0e0e]"
                     style={{
-                      background: `conic-gradient(from 180deg, ${hexToRgba(theme, 0)}, ${hexToRgba(theme, 70)}, ${hexToRgba(theme, 0)})`,
+                      width: a.avatarSize,
+                      height: a.avatarSize,
                       borderRadius:
-                        a.avatarDecoration === "hex" ? "18%" : `${a.avatarRadius}%`,
-                      animation:
-                        a.avatarDecoration === "spin-ring"
-                          ? "spin 6s linear infinite"
+                        a.avatarDecoration === "hex" || a.avatarDecoration === "square-glow"
+                          ? "18%"
+                          : `${a.avatarRadius}%`,
+                      border:
+                        a.avatarBorderWidth > 0
+                          ? `${a.avatarBorderWidth}px solid ${a.avatarBorderColor}`
                           : undefined,
+                      boxShadow: `0 8px ${a.avatarShadow}px ${hexToRgba("#000000", 55)}`,
                     }}
                   />
-                )}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={avatarUrl || "/avatar-fallback.svg"}
-                  alt=""
-                  className="relative object-cover ring-4 ring-[#0e0e0e]"
-                  style={{
-                    width: a.avatarSize,
-                    height: a.avatarSize,
-                    borderRadius:
-                      a.avatarDecoration === "hex" || a.avatarDecoration === "square-glow"
-                        ? "18%"
-                        : `${a.avatarRadius}%`,
-                    border:
-                      a.avatarBorderWidth > 0
-                        ? `${a.avatarBorderWidth}px solid ${a.avatarBorderColor}`
-                        : undefined,
-                    boxShadow: `0 8px ${a.avatarShadow}px ${hexToRgba("#000000", 55)}`,
-                  }}
-                />
-              </motion.div>
+                </motion.div>
+              </div>
             </div>
 
             <div
