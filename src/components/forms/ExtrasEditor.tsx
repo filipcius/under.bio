@@ -22,31 +22,11 @@ const MODULES: {
   title: string;
   description: string;
 }[] = [
-  {
-    id: "links",
-    title: "Links",
-    description: "Create and manage your social links.",
-  },
-  {
-    id: "badges",
-    title: "Badges",
-    description: "Browse badges shown on your page.",
-  },
-  {
-    id: "tags",
-    title: "Tags",
-    description: "Create and manage your personal tags.",
-  },
-  {
-    id: "discord",
-    title: "Discord",
-    description: "Live Discord server cards on your page.",
-  },
-  {
-    id: "tracks",
-    title: "Tracks",
-    description: "Upload music and cover art for the player.",
-  },
+  { id: "links", title: "Links", description: "Manage your social links." },
+  { id: "badges", title: "Badges", description: "Badges shown on your page." },
+  { id: "tags", title: "Tags", description: "Your personal tags." },
+  { id: "discord", title: "Discord", description: "Live Discord server cards." },
+  { id: "tracks", title: "Tracks", description: "Music and cover art." },
 ];
 
 function ModulePanel({
@@ -65,19 +45,19 @@ function ModulePanel({
   children: React.ReactNode;
 }) {
   return (
-    <section id={id} className="scroll-mt-24">
+    <section id={id} className="min-w-0 scroll-mt-24 overflow-hidden">
       <button
         type="button"
         className={cn(
-          "flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors duration-200 hover:bg-white/[0.03]",
+          "flex w-full min-w-0 items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors duration-200 hover:bg-white/[0.03]",
           open && "bg-white/[0.04]",
         )}
         onClick={onToggle}
         aria-expanded={open}
       >
-        <div className="min-w-0">
-          <p className="font-medium">{title}</p>
-          <p className="help truncate">{description}</p>
+        <div className="min-w-0 flex-1 overflow-hidden">
+          <p className="truncate font-medium">{title}</p>
+          <p className="help truncate whitespace-nowrap">{description}</p>
         </div>
         <motion.span
           animate={{ rotate: open ? 90 : 0 }}
@@ -95,9 +75,9 @@ function ModulePanel({
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            className="overflow-hidden"
+            className="min-w-0 overflow-hidden"
           >
-            <div className="space-y-3 border-t border-white/5 px-4 py-4">
+            <div className="min-w-0 space-y-3 overflow-x-clip border-t border-white/5 px-4 py-4">
               {children}
             </div>
           </motion.div>
@@ -289,18 +269,18 @@ export function ExtrasEditor({
   }
 
   return (
-    <div className="w-full min-w-0 space-y-6">
+    <div className="w-full min-w-0 space-y-6 [contain:inline-size]">
       <p className="help">
         Tap a module to open it. Everything stays collapsed until you need it.
       </p>
 
       {!isBlack && <BlackUpsellBanner />}
 
-      <div className="w-full min-w-0 divide-y divide-white/5 overflow-x-clip rounded-xl border border-white/10">
+      <div className="w-full min-w-0 divide-y divide-white/5 overflow-hidden rounded-xl border border-white/10">
       <ModulePanel
         id="links"
-        title="Links"
-        description="Create and manage your social links."
+        title={MODULES[0].title}
+        description={MODULES[0].description}
         open={openId === "links"}
         onToggle={() => toggleModule("links")}
       >
@@ -341,7 +321,7 @@ export function ExtrasEditor({
             options={SOCIAL_PLATFORMS.map((s) => ({ value: s.id, label: s.label }))}
           />
           <input
-            className="soft-input min-w-0"
+            className="soft-input min-w-0 w-full"
             placeholder={selectedSocial.placeholder}
             value={socialUrl}
             onChange={(e) => setSocialUrl(e.target.value)}
@@ -355,8 +335,8 @@ export function ExtrasEditor({
 
       <ModulePanel
         id="badges"
-        title="Badges"
-        description="Browse badges shown on your page."
+        title={MODULES[1].title}
+        description={MODULES[1].description}
         open={openId === "badges"}
         onToggle={() => toggleModule("badges")}
       >
@@ -402,9 +382,9 @@ export function ExtrasEditor({
           })}
         </div>
         {editBadge && (
-          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+          <div className="mt-3 flex min-w-0 flex-col gap-2 sm:flex-row">
             <input
-              className="soft-input"
+              className="soft-input min-w-0 flex-1"
               placeholder="Tooltip text (e.g. Suggestor Plus)"
               value={badgeTip}
               maxLength={120}
@@ -412,7 +392,7 @@ export function ExtrasEditor({
             />
             <button
               type="button"
-              className="btn btn-ghost"
+              className="btn btn-ghost shrink-0"
               onClick={() => {
                 setConfig((c) => ({
                   ...c,
@@ -429,7 +409,7 @@ export function ExtrasEditor({
             </button>
             <button
               type="button"
-              className="btn btn-danger text-xs"
+              className="btn btn-danger shrink-0 text-xs"
               onClick={() => {
                 toggleBadge(editBadge, editBadge);
                 setEditBadge(null);
@@ -443,17 +423,17 @@ export function ExtrasEditor({
 
       <ModulePanel
         id="tags"
-        title="Tags"
-        description="Create and manage your personal tags."
+        title={MODULES[2].title}
+        description={MODULES[2].description}
         open={openId === "tags"}
         onToggle={() => toggleModule("tags")}
       >
-        <div className="flex flex-wrap gap-2">
+        <div className="flex min-w-0 flex-wrap gap-2">
           {config.tags.map((t) => (
             <button
               key={t}
               type="button"
-              className="rounded-full border border-white/10 px-3 py-1 text-sm text-white/70 hover:border-white/30"
+              className="max-w-full truncate rounded-full border border-white/10 px-3 py-1 text-sm text-white/70 hover:border-white/30"
               onClick={() =>
                 setConfig((c) => ({ ...c, tags: c.tags.filter((x) => x !== t) }))
               }
@@ -462,14 +442,14 @@ export function ExtrasEditor({
             </button>
           ))}
         </div>
-        <div className="flex gap-2">
+        <div className="flex min-w-0 gap-2">
           <input
-            className="soft-input"
+            className="soft-input min-w-0 flex-1"
             placeholder="Web Developer"
             value={tag}
             onChange={(e) => setTag(e.target.value)}
           />
-          <button type="button" className="btn btn-ghost" onClick={addTag}>
+          <button type="button" className="btn btn-ghost shrink-0" onClick={addTag}>
             <Icon name="tags" className="text-xs" />
             Add tag
           </button>
@@ -478,8 +458,8 @@ export function ExtrasEditor({
 
       <ModulePanel
         id="discord"
-        title="Discord"
-        description="Live Discord server cards on your page."
+        title={MODULES[3].title}
+        description={MODULES[3].description}
         open={openId === "discord"}
         onToggle={() => toggleModule("discord")}
       >
@@ -534,16 +514,16 @@ export function ExtrasEditor({
             </div>
           ))}
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="flex min-w-0 flex-col gap-2 sm:flex-row">
           <input
-            className="soft-input"
+            className="soft-input min-w-0 flex-1"
             placeholder="https://discord.gg/...."
             value={inviteInput}
             onChange={(e) => setInviteInput(e.target.value)}
           />
           <button
             type="button"
-            className="btn btn-ghost"
+            className="btn btn-ghost shrink-0"
             onClick={addDiscordServer}
             disabled={inviteLoading || !inviteInput.trim()}
           >
@@ -555,13 +535,13 @@ export function ExtrasEditor({
 
       <ModulePanel
         id="tracks"
-        title="Tracks"
-        description="Upload music and cover art for the player."
+        title={MODULES[4].title}
+        description={MODULES[4].description}
         open={openId === "tracks"}
         onToggle={() => toggleModule("tracks")}
       >
         <input
-          className="soft-input"
+          className="soft-input min-w-0"
           placeholder="Track title"
           value={config.tracks[0]?.title || ""}
           onChange={(e) =>
