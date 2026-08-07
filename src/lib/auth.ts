@@ -248,7 +248,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth(() => {
             const { data } = await admin
               .from("profiles")
               .select(
-                "id, slug, uid, global_name, username, avatar_url, email, plan, plan_status",
+                "id, slug, uid, global_name, username, avatar_url, email, plan, plan_status, plan_period_end",
               )
               .eq("discord_id", String(token.discordId))
               .maybeSingle();
