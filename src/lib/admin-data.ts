@@ -28,30 +28,49 @@ export type AdminUserRow = {
 
 export async function getAdminStats() {
   const admin = createAdminClient();
-  const [{ count: users }, pagesRes, blackRes] = await Promise.all([
-    admin.from("profiles").select("id", { count: "exact", head: true }),
-    admin.from("pages").select("total_views, published"),
-    admin
-      .from("profiles")
-      .select("id", { count: "exact", head: true })
-      .eq("plan", "black")
-      .in("plan_status", ["active", "trialing", "past_due"]),
-  ]);
+  try {
+    const [{ count: users }, pagesRes, blackRes] = await Promise.all([
+      admin.from("profiles").select("id", { count: "exact", head: true }),
+      admin.from("pages").select("total_views, published"),
+      admin
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .eq("plan", "black")
+        .in("plan_status", ["active", "trialing", "past_due"]),
+    ]);
 
-  const pages = (pagesRes.data ?? []) as {
-    total_views: number;
-    published: boolean;
-  }[];
-  const totalViews = pages.reduce((s, p) => s + (p.total_views || 0), 0);
-  const published = pages.filter((p) => p.published).length;
+    const pages = (pagesRes.data ?? []) as {
+      total_views: number;
+      published: boolean;
+    }[];
+    const totalViews = pages.reduce((s, p) => s + (p.total_views || 0), 0);
+    const published = pages.filter((p) => p.published).length;
 
-  return {
-    users: users ?? 0,
-    published,
-    unpublished: pages.length - published,
-    totalViews,
-    black: blackRes.count ?? 0,
-  };
+    return {
+      users: users ?? 0,
+      published,
+      unpublished: pages.length - published,
+      totalViews,
+      black: blackRes.count ?? 0,
+    };
+  } catch (err) {
+    console.error("[admin:stats]", err);
+    const [{ count: users }, pagesRes] = await Promise.all([
+      admin.from("profiles").select("id", { count: "exact", head: true }),
+      admin.from("pages").select("total_views, published"),
+    ]);
+    const pages = (pagesRes.data ?? []) as {
+      total_views: number;
+      published: boolean;
+    }[];
+    return {
+      users: users ?? 0,
+      published: pages.filter((p) => p.published).length,
+      unpublished: pages.filter((p) => !p.published).length,
+      totalViews: pages.reduce((s, p) => s + (p.total_views || 0), 0),
+      black: 0,
+    };
+  }
 }
 
 export async function listAdminUsers(q?: string): Promise<AdminUserRow[]> {
@@ -78,7 +97,68 @@ export async function listAdminUsers(q?: string): Promise<AdminUserRow[]> {
   }
 
   const { data, error } = await query;
-  if (error) throw error;
+  if (error) {
+    console.error("[admin:listUsers]", error.message);
+    // Fallback without plan columns (older DBs)
+    const { data: fallback, error: fbErr } = await admin
+      .from("profiles")
+      .select(
+        "id, discord_id, username, global_name, avatar_url, slug, uid, email, created_at",
+      )
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (fbErr) {
+      console.error("[admin:listUsers:fallback]", fbErr.message);
+      return [];
+    }
+    const rows = (fallback ?? []) as Array<{
+      id: string;
+      discord_id: string;
+      username: string;
+      global_name: string | null;
+      avatar_url: string | null;
+      slug: string;
+      uid: number;
+      email: string | null;
+      created_at: string;
+    }>;
+    const ids = rows.map((p) => p.id);
+    const pagesByProfile = new Map<
+      string,
+      { id: string; published: boolean; total_views: number }
+    >();
+    if (ids.length) {
+      const { data: pages } = await admin
+        .from("pages")
+        .select("id, profile_id, published, total_views")
+        .in("profile_id", ids);
+      for (const p of (pages ?? []) as {
+        id: string;
+        profile_id: string;
+        published: boolean;
+        total_views: number;
+      }[]) {
+        pagesByProfile.set(p.profile_id, {
+          id: p.id,
+          published: p.published,
+          total_views: p.total_views,
+        });
+      }
+    }
+    return rows.map((p) => {
+      const page = pagesByProfile.get(p.id);
+      return {
+        ...p,
+        plan: "free",
+        plan_status: "inactive",
+        plan_period_end: null,
+        isBlack: false,
+        published: page?.published ?? false,
+        total_views: page?.total_views ?? 0,
+        page_id: page?.id ?? null,
+      };
+    });
+  }
 
   const profiles = (data ?? []) as Omit<
     AdminUserRow,

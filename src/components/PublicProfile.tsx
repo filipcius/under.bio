@@ -857,12 +857,13 @@ export function PublicProfile({
                   url={track.url}
                   cover={config.audio.showCover ? track.cover : undefined}
                   loop={config.audio.playbackMode === "loop"}
-                  autoPlay={config.audio.autoPlay}
-                  defaultVolume={config.audio.defaultVolume}
-                  visualizer={config.audio.visualizer}
+                  autoPlay={preview ? false : config.audio.autoPlay}
+                  defaultVolume={preview ? 0 : config.audio.defaultVolume}
+                  visualizer={!preview && config.audio.visualizer}
                   primary={primary}
                   secondary={secondary}
                   border={border}
+                  silent={preview}
                 />
               </TiltPanel>
             )}

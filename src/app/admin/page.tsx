@@ -11,10 +11,22 @@ export default async function AdminPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const sp = await searchParams;
-  const [stats, users] = await Promise.all([
-    getAdminStats(),
-    listAdminUsers(sp.q),
-  ]);
+  let stats = {
+    users: 0,
+    published: 0,
+    unpublished: 0,
+    totalViews: 0,
+    black: 0,
+  };
+  let users: Awaited<ReturnType<typeof listAdminUsers>> = [];
+  try {
+    [stats, users] = await Promise.all([
+      getAdminStats(),
+      listAdminUsers(sp.q),
+    ]);
+  } catch (err) {
+    console.error("[admin:page]", err);
+  }
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">

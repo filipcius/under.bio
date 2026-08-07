@@ -12,6 +12,7 @@ import { Icon } from "@/components/Icon";
 import { BlackDiamond } from "@/components/BlackDiamond";
 import { BlackUpsellBanner } from "@/components/BlackUpsell";
 import { StyleLivePreview } from "@/components/StyleLivePreview";
+import { ColorPicker } from "@/components/forms/ColorPicker";
 import { enforceFreePlanConfig } from "@/lib/plan";
 
 function Field({
@@ -84,15 +85,7 @@ function ColorField({
 }) {
   return (
     <Field label={label}>
-      <div className="flex gap-2">
-        <input
-          type="color"
-          className="h-11 w-12 cursor-pointer rounded-lg border border-white/10 bg-transparent p-1"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-        />
-        <input className="soft-input" value={value} onChange={(e) => onChange(e.target.value)} />
-      </div>
+      <ColorPicker value={value} onChange={onChange} />
     </Field>
   );
 }

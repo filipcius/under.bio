@@ -23,6 +23,7 @@ export function TrackPlayer({
   primary,
   secondary,
   border,
+  silent = false,
 }: {
   title: string;
   url: string;
@@ -34,6 +35,8 @@ export function TrackPlayer({
   primary: string;
   secondary: string;
   border: string;
+  /** Preview / editor mode — never load or play audio */
+  silent?: boolean;
 }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const barRef = useRef<HTMLDivElement | null>(null);
@@ -42,7 +45,7 @@ export function TrackPlayer({
   const [playing, setPlaying] = useState(false);
   const [current, setCurrent] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(defaultVolume / 100);
+  const [volume, setVolume] = useState(silent ? 0 : defaultVolume / 100);
   const [ready, setReady] = useState(false);
 
   function syncDuration(audio: HTMLAudioElement) {
@@ -94,7 +97,13 @@ export function TrackPlayer({
 
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio || silent) {
+      setPlaying(false);
+      setCurrent(0);
+      setDuration(0);
+      setReady(false);
+      return;
+    }
     audio.load();
 
     const onMeta = () => syncDuration(audio);
@@ -123,12 +132,13 @@ export function TrackPlayer({
     }
 
     return () => {
+      audio.pause();
       audio.removeEventListener("loadedmetadata", onMeta);
       audio.removeEventListener("durationchange", onMeta);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [url, autoPlay]);
+  }, [url, autoPlay, silent]);
 
   useEffect(() => {
     if (audioRef.current && !audioRef.current.muted) {
@@ -154,6 +164,7 @@ export function TrackPlayer({
   }, [playing]);
 
   async function toggle() {
+    if (silent) return;
     const audio = audioRef.current;
     if (!audio) return;
     if (playing) {
@@ -262,7 +273,9 @@ export function TrackPlayer({
         </div>
       </div>
 
-      <audio ref={audioRef} src={url} loop={loop} preload="auto" playsInline />
+      {!silent && (
+        <audio ref={audioRef} src={url} loop={loop} preload="auto" playsInline muted={silent} />
+      )}
     </div>
   );
 }
