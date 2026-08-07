@@ -225,7 +225,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth(() => {
             token.profileId = profile.id;
             token.slug = profile.slug;
             token.uid = profile.uid;
-            token.isBlack = hasBlack(profile.plan, profile.plan_status);
+            token.isBlack = hasBlack(
+              profile.plan,
+              profile.plan_status,
+              profile.plan_period_end,
+            );
             token.name = profile.global_name || profile.username;
             token.picture = profile.avatar_url ?? undefined;
             token.email = profile.email ?? undefined;
@@ -264,7 +268,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth(() => {
               token.profileId = row.id;
               token.slug = row.slug;
               token.uid = row.uid;
-              token.isBlack = hasBlack(row.plan, row.plan_status);
+              token.isBlack = hasBlack(
+                row.plan,
+                row.plan_status,
+                (row as { plan_period_end?: string | null }).plan_period_end,
+              );
               token.name = row.global_name || row.username;
               token.picture = row.avatar_url ?? undefined;
               token.email = row.email ?? undefined;

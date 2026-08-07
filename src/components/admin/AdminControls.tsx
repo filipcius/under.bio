@@ -48,11 +48,28 @@ export function AdminQuickActions({
         type="button"
         className="btn btn-ghost text-xs"
         disabled={pending}
-        onClick={() => run(() => adminSetPlan(profileId, isBlack ? "free" : "black"))}
+        onClick={() =>
+          run(() =>
+            isBlack
+              ? adminSetPlan(profileId, "free")
+              : adminSetPlan(profileId, "black", 30),
+          )
+        }
       >
         <BlackDiamond />
-        {isBlack ? "Revoke VOID" : "Grant VOID"}
+        {isBlack ? "Revoke VOID" : "VOID · 1 mo"}
       </button>
+      {isBlack && (
+        <button
+          type="button"
+          className="btn btn-ghost text-xs"
+          disabled={pending}
+          onClick={() => run(() => adminSetPlan(profileId, "black", 30))}
+          title="Extend VOID by another month"
+        >
+          +1 mo
+        </button>
+      )}
       {msg && <span className="text-xs text-white/45">{msg}</span>}
     </div>
   );
@@ -153,11 +170,27 @@ export function AdminUserDetailForm({
           type="button"
           className="btn btn-primary"
           disabled={pending}
-          onClick={() => run(() => adminSetPlan(profileId, isBlack ? "free" : "black"))}
+          onClick={() =>
+            run(() =>
+              isBlack
+                ? adminSetPlan(profileId, "free")
+                : adminSetPlan(profileId, "black", 30),
+            )
+          }
         >
           <BlackDiamond />
-          {isBlack ? "Revoke VOID" : "Grant VOID"}
+          {isBlack ? "Revoke VOID" : "Grant VOID · 1 month"}
         </button>
+        {isBlack && (
+          <button
+            type="button"
+            className="btn btn-ghost"
+            disabled={pending}
+            onClick={() => run(() => adminSetPlan(profileId, "black", 30))}
+          >
+            <BlackDiamond /> Extend +1 month
+          </button>
+        )}
         <button
           type="button"
           className="btn btn-ghost"

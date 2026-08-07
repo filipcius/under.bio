@@ -9,9 +9,18 @@ export const BLACK_PRICE_CENTS = 499;
 export const BLACK_NAME = "VOID";
 export const BLACK_TAGLINE = "Full control. Zero limits.";
 
-export function hasBlack(plan?: string | null, status?: string | null) {
+export function hasBlack(
+  plan?: string | null,
+  status?: string | null,
+  periodEnd?: string | null,
+) {
   if (plan !== "black") return false;
-  return status === "active" || status === "trialing" || status === "past_due";
+  if (!(status === "active" || status === "trialing" || status === "past_due")) {
+    return false;
+  }
+  // Comp / billing window ended
+  if (periodEnd && new Date(periodEnd).getTime() < Date.now()) return false;
+  return true;
 }
 
 /** Features locked on free — shown with diamond in Style editor */

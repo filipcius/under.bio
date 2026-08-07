@@ -60,7 +60,11 @@ export default async function PublicSlugPage({
   }
 
   const totalViews = page.total_views + (counted ? 1 : 0);
-  const black = hasBlack(profile.plan, profile.plan_status);
+  const black = hasBlack(
+    profile.plan,
+    profile.plan_status,
+    profile.plan_period_end,
+  );
   const config = black ? page.config : enforceFreePlanConfig(page.config);
   const rank = config.options.showRank ? await getViewRank(totalViews) : null;
 

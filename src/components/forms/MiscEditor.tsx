@@ -118,7 +118,7 @@ export function MiscEditor({
   const dirty = JSON.stringify(config) !== baseline;
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(280px,380px)]">
       <div className="space-y-4">
       <p className="help">
         Full style lab - media, motion, effects, typography, panels, audio. Experiment hard, then

@@ -37,11 +37,13 @@ export async function getPlanByProfileId(profileId: string): Promise<PlanState> 
 
   const plan = (row?.plan === "black" ? "black" : "free") as PlanId;
   const status = row?.plan_status || "inactive";
+  const periodEnd = row?.plan_period_end ?? null;
+  const active = hasBlack(plan, status, periodEnd);
   return {
-    plan,
-    status,
-    periodEnd: row?.plan_period_end ?? null,
-    isBlack: hasBlack(plan, status),
+    plan: active ? "black" : "free",
+    status: active ? status : "inactive",
+    periodEnd,
+    isBlack: active,
     stripeCustomerId: row?.stripe_customer_id ?? null,
   };
 }

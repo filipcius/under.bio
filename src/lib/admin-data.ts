@@ -196,7 +196,7 @@ export async function listAdminUsers(q?: string): Promise<AdminUserRow[]> {
       ...p,
       plan: p.plan || "free",
       plan_status: p.plan_status || "inactive",
-      isBlack: hasBlack(p.plan, p.plan_status),
+      isBlack: hasBlack(p.plan, p.plan_status, p.plan_period_end),
       published: page?.published ?? false,
       total_views: page?.total_views ?? 0,
       page_id: page?.id ?? null,
@@ -235,6 +235,6 @@ export async function getAdminUser(profileId: string) {
   return {
     profile: p,
     page: pageRow,
-    isBlack: hasBlack(p.plan, p.plan_status),
+    isBlack: hasBlack(p.plan, p.plan_status, p.plan_period_end),
   };
 }

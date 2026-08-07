@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { ProfileTemplate } from "@/lib/profile-template";
 import { saveProfileConfig } from "@/app/actions/profile";
@@ -12,6 +12,80 @@ import { BADGE_PRESETS, SOCIAL_PLATFORMS } from "@/lib/socials";
 import { FREE_CAPS } from "@/lib/plan";
 import { BlackDiamond } from "@/components/BlackDiamond";
 import { BlackUpsellBanner } from "@/components/BlackUpsell";
+import { cn } from "@/lib/utils";
+
+type ModuleId = "links" | "badges" | "tags" | "discord" | "tracks";
+
+const MODULES: {
+  id: ModuleId;
+  title: string;
+  description: string;
+}[] = [
+  {
+    id: "links",
+    title: "Links",
+    description: "Create and manage your social links.",
+  },
+  {
+    id: "badges",
+    title: "Badges",
+    description: "Browse badges shown on your page.",
+  },
+  {
+    id: "tags",
+    title: "Tags",
+    description: "Create and manage your personal tags.",
+  },
+  {
+    id: "discord",
+    title: "Discord",
+    description: "Live Discord server cards on your page.",
+  },
+  {
+    id: "tracks",
+    title: "Tracks",
+    description: "Upload music and cover art for the player.",
+  },
+];
+
+function ModulePanel({
+  id,
+  title,
+  description,
+  open,
+  onToggle,
+  children,
+}: {
+  id: ModuleId;
+  title: string;
+  description: string;
+  open: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <section id={id} className="scroll-mt-24">
+      <button
+        type="button"
+        className={cn(
+          "flex w-full items-center justify-between px-4 py-4 text-left transition hover:bg-white/[0.03]",
+          open && "bg-white/[0.04]",
+        )}
+        onClick={onToggle}
+        aria-expanded={open}
+      >
+        <div>
+          <p className="font-medium">{title}</p>
+          <p className="help">{description}</p>
+        </div>
+        <span className="text-white/40">{open ? "▾" : "→"}</span>
+      </button>
+      {open && (
+        <div className="space-y-3 border-t border-white/5 px-4 py-4">{children}</div>
+      )}
+    </section>
+  );
+}
 
 export function ExtrasEditor({
   initial,
@@ -30,8 +104,16 @@ export function ExtrasEditor({
   const [inviteLoading, setInviteLoading] = useState(false);
   const [badgeTip, setBadgeTip] = useState("");
   const [editBadge, setEditBadge] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<ModuleId | null>(null);
   const router = useRouter();
   const lock = () => router.push("/black");
+
+  useEffect(() => {
+    const hash = window.location.hash.replace("#", "") as ModuleId;
+    if (MODULES.some((m) => m.id === hash)) {
+      setOpenId(hash);
+    }
+  }, []);
 
   const linkCap = isBlack ? 40 : FREE_CAPS.links;
   const badgeCap = isBlack ? 24 : FREE_CAPS.badges;
@@ -152,18 +234,38 @@ export function ExtrasEditor({
     }
   }
 
+  function toggleModule(id: ModuleId) {
+    setOpenId((v) => {
+      const next = v === id ? null : id;
+      if (next) {
+        window.history.replaceState(null, "", `#${next}`);
+        requestAnimationFrame(() => {
+          document.getElementById(next)?.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      } else {
+        window.history.replaceState(null, "", window.location.pathname);
+      }
+      return next;
+    });
+  }
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <p className="help">
-        Build modules for your page: socials, tags, badges, Discord servers, and music. Everything
-        here is real data - no placeholders.
+        Tap a module to open it. Everything stays collapsed until you need it.
       </p>
 
       {!isBlack && <BlackUpsellBanner />}
 
-      <section>
-        <h2 className="section-title mb-3 text-xl">Socials</h2>
-        <p className="help mb-3">
+      <div className="divide-y divide-white/5 overflow-hidden rounded-xl border border-white/10">
+      <ModulePanel
+        id="links"
+        title="Links"
+        description="Create and manage your social links."
+        open={openId === "links"}
+        onToggle={() => toggleModule("links")}
+      >
+        <p className="help">
           {isBlack
             ? "Up to 40 platforms - Instagram, TikTok, Steam, Spotify, GitHub, and more."
             : `Free: ${FREE_CAPS.links} socials. `}
@@ -173,7 +275,7 @@ export function ExtrasEditor({
             </span>
           )}
         </p>
-        <div className="mb-3 flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2">
           {config.links.map((link, i) => (
             <button
               key={`${link.url}-${i}`}
@@ -209,11 +311,16 @@ export function ExtrasEditor({
             Add
           </button>
         </div>
-      </section>
+      </ModulePanel>
 
-      <section>
-        <h2 className="section-title mb-3 text-xl">Badge shelf</h2>
-        <p className="help mb-3">
+      <ModulePanel
+        id="badges"
+        title="Badges"
+        description="Browse badges shown on your page."
+        open={openId === "badges"}
+        onToggle={() => toggleModule("badges")}
+      >
+        <p className="help">
           Toggle icons for the badge row. Click an active badge, then set the hover tooltip text
           visitors see on your public page.
         </p>
@@ -292,11 +399,16 @@ export function ExtrasEditor({
             </button>
           </div>
         )}
-      </section>
+      </ModulePanel>
 
-      <section>
-        <h2 className="section-title mb-3 text-xl">Tags</h2>
-        <div className="mb-3 flex flex-wrap gap-2">
+      <ModulePanel
+        id="tags"
+        title="Tags"
+        description="Create and manage your personal tags."
+        open={openId === "tags"}
+        onToggle={() => toggleModule("tags")}
+      >
+        <div className="flex flex-wrap gap-2">
           {config.tags.map((t) => (
             <button
               key={t}
@@ -322,19 +434,28 @@ export function ExtrasEditor({
             Add tag
           </button>
         </div>
-      </section>
+      </ModulePanel>
 
-      <section>
-        <h2 className="section-title mb-3 inline-flex items-center gap-2 text-xl">
-          Discord servers {!isBlack && <BlackDiamond />}
-        </h2>
-        <p className="help mb-3">
+      <ModulePanel
+        id="discord"
+        title="Discord"
+        description="Live Discord server cards on your page."
+        open={openId === "discord"}
+        onToggle={() => toggleModule("discord")}
+      >
+        <p className="help">
           {isBlack
             ? "Live logo + online + members from a real invite link."
             : "Live Discord cards are a VOID feature."}
+          {!isBlack && (
+            <>
+              {" "}
+              <BlackDiamond className="inline" />
+            </>
+          )}
         </p>
         {!isBlack && (
-          <button type="button" className="btn btn-primary mb-3" onClick={lock}>
+          <button type="button" className="btn btn-primary" onClick={lock}>
             <BlackDiamond /> Unlock Discord cards
           </button>
         )}
@@ -373,7 +494,7 @@ export function ExtrasEditor({
             </div>
           ))}
         </div>
-        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <input
             className="soft-input"
             placeholder="https://discord.gg/...."
@@ -390,10 +511,15 @@ export function ExtrasEditor({
             {inviteLoading ? "Fetching…" : "Add server"}
           </button>
         </div>
-      </section>
+      </ModulePanel>
 
-      <section className="space-y-3">
-        <h2 className="section-title text-xl">Music track</h2>
+      <ModulePanel
+        id="tracks"
+        title="Tracks"
+        description="Upload music and cover art for the player."
+        open={openId === "tracks"}
+        onToggle={() => toggleModule("tracks")}
+      >
         <input
           className="soft-input"
           placeholder="Track title"
@@ -447,7 +573,8 @@ export function ExtrasEditor({
             }))
           }
         />
-      </section>
+      </ModulePanel>
+      </div>
 
       <SaveBar
         saving={pending}

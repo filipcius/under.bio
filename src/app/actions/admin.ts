@@ -101,6 +101,7 @@ export async function adminSetPublished(
 export async function adminSetPlan(
   profileId: string,
   plan: "free" | "black",
+  days = 30,
 ): Promise<AdminActionResult> {
   try {
     const session = await guard("write");
@@ -108,18 +109,31 @@ export async function adminSetPlan(
     if (id == null) return { ok: false, error: "Invalid id." };
     const planParsed = planSchema.safeParse(plan);
     if (!planParsed.success) return { ok: false, error: "Invalid plan." };
+    const grantDays = Math.min(365, Math.max(1, Math.floor(days || 30)));
 
     const admin = createAdminClient();
+
+    let periodEnd: string | null = null;
+    if (planParsed.data === "black") {
+      const { data: current } = await admin
+        .from("profiles")
+        .select("plan_period_end")
+        .eq("id", id)
+        .maybeSingle();
+      const existing = (current as { plan_period_end?: string | null } | null)
+        ?.plan_period_end;
+      const base = existing ? new Date(existing).getTime() : 0;
+      const from = Math.max(Date.now(), Number.isFinite(base) ? base : 0);
+      periodEnd = new Date(from + grantDays * 24 * 60 * 60 * 1000).toISOString();
+    }
+
     const { error, count } = await admin
       .from("profiles")
       .update(
         {
           plan: planParsed.data,
           plan_status: planParsed.data === "black" ? "active" : "inactive",
-          plan_period_end:
-            planParsed.data === "black"
-              ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-              : null,
+          plan_period_end: periodEnd,
         },
         { count: "exact" },
       )
@@ -130,15 +144,22 @@ export async function adminSetPlan(
     await writeAdminAudit({
       actorProfileId: session.user.profileId,
       actorDiscordId: session.user.discordId,
-      action: planParsed.data === "black" ? "grant_black" : "revoke_black",
+      action: planParsed.data === "black" ? "grant_void_month" : "revoke_void",
       targetProfileId: id,
+      meta:
+        planParsed.data === "black"
+          ? { days: grantDays, periodEnd }
+          : undefined,
     });
 
     revalidatePath("/admin");
     revalidatePath(`/admin/users/${id}`);
     return {
       ok: true,
-      message: planParsed.data === "black" ? "Granted under VOID." : "Set to Free.",
+      message:
+        planParsed.data === "black"
+          ? `Granted VOID for ${grantDays} days (until ${new Date(periodEnd!).toLocaleDateString()}).`
+          : "Set to Free.",
     };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Failed." };
