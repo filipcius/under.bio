@@ -44,6 +44,7 @@ showMusic, showCornerAccents
 - visualizer: boolean
 - playerStyle: "default" | "glass" | "minimal" | "neon"   [neon/glass = VOID]
 - showCover: boolean
+- playerSize: 72–168 (square cover edge in px; album art stays 1:1)
 - eqStyle: "bars" | "wave" | "dots"
 - eqColor: "white" | "theme" | "rainbow"
 
@@ -58,8 +59,11 @@ showMusic, showCornerAccents
   FREE only: "none" | "fade" | "slide-up"
 - enterAnimationSpeed: 1–100
 - revealText: string max 120
+- revealHint: string max 80
 - revealBlur: 0–40
 - revealStyle: "fade" | "blur" | "zoom" | "glitch"   [blur/zoom/glitch = VOID]
+- revealUseTheme: boolean (true = gate uses page bg + primary text)
+- revealTextColor / revealBgColor: hex (used when revealUseTheme is false)
 - particles: "none" | "dust" | "snow" | "embers" | "rain" | "stars" | "sparkle" | "matrix" | "ash"
   FREE: must be "none"
 - particleDensity: 10–100
@@ -83,7 +87,8 @@ FREE: keep effects at defaults / off (only pulseRank may stay true)
 - font: "syne" | "outfit" | "space-grotesk" | "dm-sans" | "bebas" | "rubik" | "cinzel" | "space-mono"
 - bioFont: "inherit" | "outfit" | "dm-sans" | "space-mono" | "cinzel"
 - usernameSparkles: "none" | "white" | "black" | "theme"
-- avatarDecoration: "none" | "ring" | "glow" | "pulse" | "spin-ring" | "hex" | "square-glow"
+- avatarDecoration: "none" | "ring" | "glow" | "pulse" | "spin-ring" | "hex" | "square-glow" (CSS effect — separate from Discord Nitro decoration toggle showDiscordAvatarDecoration)
+- showDiscordAvatarDecoration: boolean (Discord shop/Nitro avatar decoration overlay)
   FREE: avoid "spin-ring" | "hex"
 - avatarRadius 0–50 · avatarSize 48–140 · avatarBorderWidth 0–8 · avatarShadow 0–100 · avatarOffsetY -20–40
 - cursor: "system" | "minimal" | "dot" | "cross" | "custom"   FREE: "system" only

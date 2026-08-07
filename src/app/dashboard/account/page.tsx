@@ -4,10 +4,10 @@ import { DashboardShell } from "@/components/DashboardShell";
 import { redirect } from "next/navigation";
 import { signOut } from "@/lib/auth";
 import { getPlanByProfileId } from "@/lib/subscription";
-import { BlackCheckoutButton } from "@/components/BlackCheckoutButton";
+import { BlackCheckoutButton, GiftVoidButton } from "@/components/BlackCheckoutButton";
 import { ManageBillingButton } from "@/components/ManageBillingButton";
 import { BlackDiamond } from "@/components/BlackDiamond";
-import { BLACK_NAME, BLACK_PRICE_USD } from "@/lib/plan";
+import { BLACK_NAME, BLACK_PRICE_LINE, BLACK_PRICE_USD } from "@/lib/plan";
 import Link from "next/link";
 
 export default async function AccountPage() {
@@ -24,6 +24,20 @@ export default async function AccountPage() {
           secure.
         </p>
 
+        <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium text-white/85">Invite friends</p>
+              <p className="mt-1 text-sm text-white/45">
+                10 new signups → 14 days free {BLACK_NAME}
+              </p>
+            </div>
+            <Link href="/dashboard/invites" className="btn btn-ghost text-sm">
+              Open invites
+            </Link>
+          </div>
+        </div>
+
         <div className="rounded-2xl border border-sky-300/25 bg-gradient-to-br from-sky-400/[0.08] to-transparent p-5">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
@@ -34,15 +48,18 @@ export default async function AccountPage() {
                 {plan.isBlack ? `under ${BLACK_NAME}` : "Free"}
               </p>
               <p className="mt-1 text-sm text-white/50">
-                {plan.isBlack
-                  ? `Active${plan.periodEnd ? ` · renews ${new Date(plan.periodEnd).toLocaleDateString()}` : ""} · $${BLACK_PRICE_USD}/mo`
-                  : `Effects lab, cursors, Discord cards from $${BLACK_PRICE_USD}/mo`}
+                {plan.isLifetime
+                  ? `Lifetime · one-time $${BLACK_PRICE_USD}`
+                  : plan.isBlack && plan.periodEnd
+                    ? `Active until ${new Date(plan.periodEnd).toLocaleDateString()} (timed unlock)`
+                    : `Full style lab · ${BLACK_PRICE_LINE}`}
               </p>
             </div>
             <div className="flex w-full max-w-xs flex-col gap-2 sm:w-auto">
               {plan.isBlack ? (
                 <>
-                  <ManageBillingButton />
+                  {plan.periodEnd ? <ManageBillingButton /> : null}
+                  <GiftVoidButton signedIn className="btn btn-ghost text-sm" />
                   <Link href="/black" className="btn btn-ghost text-sm">
                     See {BLACK_NAME} perks
                   </Link>
@@ -51,7 +68,7 @@ export default async function AccountPage() {
                 <>
                   <BlackCheckoutButton
                     signedIn
-                    label={`Unlock ${BLACK_NAME} · $${BLACK_PRICE_USD}/mo`}
+                    label={`Get ${BLACK_NAME} · ${BLACK_PRICE_LINE}`}
                   />
                   <Link href="/black" className="text-center text-xs text-white/45 hover:text-white/70">
                     Compare Free vs {BLACK_NAME}
@@ -96,7 +113,7 @@ export default async function AccountPage() {
         </div>
 
         <div className="rounded-xl border border-sky-400/30 bg-sky-500/10 px-4 py-3 text-sm">
-          Discord avatar, banner, and flags refresh every time you log in.
+          Discord avatar, banner, avatar decoration, and flags refresh every time you log in.
         </div>
 
         <form

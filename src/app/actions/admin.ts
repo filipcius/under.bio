@@ -11,6 +11,8 @@ import {
 } from "@/lib/profile-template";
 import { slugify } from "@/lib/utils";
 import { rateLimit } from "@/lib/security";
+import type { ThemeTemplateRow, ThemeTemplateStatus } from "@/lib/supabase/types";
+import { listThemeTemplates, type ThemeTemplateListItem } from "@/app/actions/templates";
 
 export type AdminActionResult =
   | { ok: true; message?: string }
@@ -410,6 +412,152 @@ export async function adminSetViews(
     revalidatePath(`/admin/users/${id}`);
     revalidatePath("/admin");
     return { ok: true, message: "Views updated." };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Failed." };
+  }
+}
+
+export async function adminSetCanPublishTemplates(
+  profileId: string,
+  enabled: boolean,
+): Promise<AdminActionResult> {
+  try {
+    const session = await guard("write");
+    const id = parseId(profileId);
+    if (id == null) return { ok: false, error: "Invalid id." };
+
+    const admin = createAdminClient();
+    const { error, count } = await admin
+      .from("profiles")
+      .update({ can_publish_templates: enabled }, { count: "exact" })
+      .eq("id", id);
+    if (error) return { ok: false, error: "Update failed. Run theme_templates.sql?" };
+    if (!count) return { ok: false, error: "User not found." };
+
+    await writeAdminAudit({
+      actorProfileId: session.user.profileId,
+      actorDiscordId: session.user.discordId,
+      action: enabled ? "grant_template_publish" : "revoke_template_publish",
+      targetProfileId: id,
+      meta: { enabled },
+    });
+
+    revalidatePath(`/admin/users/${id}`);
+    return { ok: true, message: enabled ? "Early template publish granted." : "Early publish revoked." };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Failed." };
+  }
+}
+
+export async function adminListThemeTemplates(
+  status?: ThemeTemplateStatus | "all",
+): Promise<ThemeTemplateListItem[]> {
+  await guard("read");
+  if (status && status !== "all") {
+    return listThemeTemplates({ status, sort: "newest", limit: 100 });
+  }
+
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("theme_templates")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(100);
+  const rows = (data || []) as ThemeTemplateRow[];
+  const authorIds = [...new Set(rows.map((r) => r.author_id))];
+  const { data: authors } = authorIds.length
+    ? await admin
+        .from("profiles")
+        .select("id, slug, global_name, username, avatar_url")
+        .in("id", authorIds)
+    : { data: [] as Array<Record<string, unknown>> };
+  const byId = new Map(
+    (authors || []).map((a) => [a.id as string, a as Record<string, unknown>]),
+  );
+  return rows.map((row) => {
+    const p = byId.get(row.author_id);
+    return {
+      ...row,
+      author_slug: (p?.slug as string) || null,
+      author_name: ((p?.global_name as string) || (p?.username as string) || null) as
+        | string
+        | null,
+      author_avatar: (p?.avatar_url as string) || null,
+    };
+  });
+}
+
+export async function adminModerateTemplate(
+  id: string,
+  action: "approve" | "reject" | "hide" | "feature" | "unfeature" | "delete",
+): Promise<AdminActionResult> {
+  try {
+    const session = await guard(action === "delete" ? "danger" : "write");
+    const tplId = z.string().uuid().safeParse(id);
+    if (!tplId.success) return { ok: false, error: "Invalid id." };
+
+    const admin = createAdminClient();
+    const { data: existing } = await admin
+      .from("theme_templates")
+      .select("id, author_id, status, featured")
+      .eq("id", tplId.data)
+      .maybeSingle();
+    if (!existing) return { ok: false, error: "Theme not found." };
+
+    if (action === "delete") {
+      const { error } = await admin.from("theme_templates").delete().eq("id", tplId.data);
+      if (error) return { ok: false, error: "Delete failed." };
+      await writeAdminAudit({
+        actorProfileId: session.user.profileId,
+        actorDiscordId: session.user.discordId,
+        action: "template_delete",
+        targetProfileId: existing.author_id as string,
+        meta: { templateId: tplId.data },
+      });
+      revalidatePath("/admin");
+      revalidatePath("/templates");
+      revalidatePath("/dashboard/templates");
+      return { ok: true, message: "Theme deleted." };
+    }
+
+    const patch: Record<string, unknown> = {};
+    let auditAction = "template_approve";
+    if (action === "approve") {
+      patch.status = "approved";
+      auditAction = "template_approve";
+    } else if (action === "reject") {
+      patch.status = "rejected";
+      auditAction = "template_reject";
+    } else if (action === "hide") {
+      patch.status = "hidden";
+      auditAction = "template_reject";
+    } else if (action === "feature") {
+      patch.featured = true;
+      patch.status = "approved";
+      auditAction = "template_feature";
+    } else if (action === "unfeature") {
+      patch.featured = false;
+      auditAction = "template_feature";
+    }
+
+    const { error } = await admin
+      .from("theme_templates")
+      .update(patch)
+      .eq("id", tplId.data);
+    if (error) return { ok: false, error: "Update failed." };
+
+    await writeAdminAudit({
+      actorProfileId: session.user.profileId,
+      actorDiscordId: session.user.discordId,
+      action: auditAction,
+      targetProfileId: existing.author_id as string,
+      meta: { templateId: tplId.data, action },
+    });
+
+    revalidatePath("/admin");
+    revalidatePath("/templates");
+    revalidatePath("/dashboard/templates");
+    return { ok: true, message: "Theme updated." };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Failed." };
   }

@@ -4,6 +4,8 @@ import { maybeRecordPageView, getViewRank } from "@/lib/views";
 import { PublicProfile } from "@/components/PublicProfile";
 import { OWNER_BADGE_DISCORD_IDS } from "@/lib/socials";
 import { enforceFreePlanConfig, hasBlack } from "@/lib/plan";
+import { profileDecorationAsset } from "@/lib/discord";
+import { discordAvatarDecorationUrl } from "@/lib/utils";
 import type { Metadata } from "next";
 
 const reserved = new Set([
@@ -68,10 +70,14 @@ export default async function PublicSlugPage({
   const config = black ? page.config : enforceFreePlanConfig(page.config);
   const rank = config.options.showRank ? await getViewRank(totalViews) : null;
 
+  const decorationAsset = profileDecorationAsset(profile);
+  const avatarDecorationUrl = discordAvatarDecorationUrl(decorationAsset);
+
   return (
     <PublicProfile
       config={config}
       avatarUrl={profile.avatar_url}
+      avatarDecorationUrl={avatarDecorationUrl}
       uid={profile.uid}
       totalViews={totalViews}
       rank={rank}

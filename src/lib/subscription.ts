@@ -1,11 +1,12 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { hasBlack, type PlanId } from "@/lib/plan";
+import { hasBlack, hasLifetimeVoid, type PlanId } from "@/lib/plan";
 
 export type PlanState = {
   plan: PlanId;
   status: string;
   periodEnd: string | null;
   isBlack: boolean;
+  isLifetime: boolean;
   stripeCustomerId: string | null;
 };
 
@@ -18,12 +19,12 @@ export async function getPlanByProfileId(profileId: string): Promise<PlanState> 
     .maybeSingle();
 
   if (error) {
-    // Migration not applied yet (supabase/subscriptions.sql)
     return {
       plan: "free",
       status: "inactive",
       periodEnd: null,
       isBlack: false,
+      isLifetime: false,
       stripeCustomerId: null,
     };
   }
@@ -44,8 +45,26 @@ export async function getPlanByProfileId(profileId: string): Promise<PlanState> 
     status: active ? status : "inactive",
     periodEnd,
     isBlack: active,
+    isLifetime: hasLifetimeVoid(plan, status, periodEnd),
     stripeCustomerId: row?.stripe_customer_id ?? null,
   };
+}
+
+/** Grant permanent VOID (paid lifetime or gift). Clears period end. */
+export async function grantVoidLifetime(input: {
+  profileId: string;
+  customerId?: string | null;
+  stripeSessionId?: string | null;
+}) {
+  const admin = createAdminClient();
+  const patch: Record<string, unknown> = {
+    plan: "black",
+    plan_status: "active",
+    plan_period_end: null,
+  };
+  if (input.customerId) patch.stripe_customer_id = input.customerId;
+
+  await admin.from("profiles").update(patch).eq("id", input.profileId);
 }
 
 export async function setPlanFromStripe(input: {
@@ -60,6 +79,38 @@ export async function setPlanFromStripe(input: {
     input.status === "active" ||
     input.status === "trialing" ||
     input.status === "past_due";
+
+  if (input.profileId || input.customerId) {
+    const q = admin
+      .from("profiles")
+      .select("plan, plan_status, plan_period_end, stripe_subscription_id");
+    const { data: existing } = input.profileId
+      ? await q.eq("id", input.profileId).maybeSingle()
+      : await q.eq("stripe_customer_id", input.customerId!).maybeSingle();
+
+    const row = existing as {
+      plan?: string | null;
+      plan_status?: string | null;
+      plan_period_end?: string | null;
+      stripe_subscription_id?: string | null;
+    } | null;
+
+    const lifetime = hasLifetimeVoid(
+      row?.plan,
+      row?.plan_status,
+      row?.plan_period_end,
+    );
+    if (lifetime && !active) {
+      if (
+        input.subscriptionId &&
+        row?.stripe_subscription_id &&
+        input.subscriptionId !== row.stripe_subscription_id
+      ) {
+        return;
+      }
+      if (!row?.stripe_subscription_id) return;
+    }
+  }
 
   const patch = {
     plan: active ? "black" : "free",

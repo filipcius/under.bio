@@ -40,6 +40,7 @@ export const profileTemplateSchema = z.object({
     showVerified: z.boolean().default(true),
     showOwnerBadge: z.boolean().default(true),
     showStatusDot: z.boolean().default(true),
+    showDiscordAvatarDecoration: z.boolean().default(true),
     showBio: z.boolean().default(true),
     showMusic: z.boolean().default(true),
     showCornerAccents: z.boolean().default(true),
@@ -63,6 +64,8 @@ export const profileTemplateSchema = z.object({
     visualizer: z.boolean().default(true),
     playerStyle: z.enum(["default", "glass", "minimal", "neon"]).default("default"),
     showCover: z.boolean().default(true),
+    /** Square cover edge length in px — player height locks to this (1:1 art) */
+    playerSize: z.number().min(72).max(168).default(120),
     eqStyle: z.enum(["bars", "wave", "dots"]).default("bars"),
     eqColor: z.enum(["white", "theme", "rainbow"]).default("white"),
   }),
@@ -102,8 +105,19 @@ export const profileTemplateSchema = z.object({
       .default("slide-up"),
     enterAnimationSpeed: z.number().min(1).max(100).default(55),
     revealText: z.string().max(120).default("Click to enter"),
+    revealHint: z.string().max(80).default(""),
     revealBlur: z.number().min(0).max(40).default(12),
     revealStyle: z.enum(["fade", "blur", "zoom", "glitch"]).default("fade"),
+    /** When true, gate uses background.color + appearance.primaryText */
+    revealUseTheme: z.boolean().default(true),
+    revealTextColor: z
+      .string()
+      .regex(/^#[0-9A-Fa-f]{6}$/)
+      .default("#FFFFFF"),
+    revealBgColor: z
+      .string()
+      .regex(/^#[0-9A-Fa-f]{6}$/)
+      .default("#0A0A0A"),
     particles: z
       .enum(["none", "dust", "snow", "embers", "rain", "stars", "sparkle", "matrix", "ash"])
       .default("none"),

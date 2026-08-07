@@ -1,3 +1,4 @@
-/** Public Discord server invite (required for sign-in). */
-export const DISCORD_INVITE_URL =
-  process.env.NEXT_PUBLIC_DISCORD_INVITE?.trim() || "https://discord.gg/xkyQjTsGts";
+/** Canonical under.bio Discord invite — always prefer this over stale env placeholders. */
+export const DISCORD_INVITE_URL = "https://discord.gg/xkyQjTsGts";
+
+export const DISCORD_INVITE_CODE = "xkyQjTsGts";

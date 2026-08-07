@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
-import { setPlanFromStripe } from "@/lib/subscription";
+import { grantVoidLifetime, setPlanFromStripe } from "@/lib/subscription";
 import { notifyDiscordSubscription } from "@/lib/discord-webhook";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { BLACK_PRICE_CENTS } from "@/lib/plan";
 
 export const runtime = "nodejs";
 
@@ -25,33 +26,73 @@ async function syncSubscription(sub: Stripe.Subscription) {
   });
 }
 
-async function notifyNewVoidCheckout(session: Stripe.Checkout.Session) {
-  const profileId = session.metadata?.profileId || null;
+async function notifyVoidPurchase(session: Stripe.Checkout.Session) {
+  const recipientId =
+    session.metadata?.recipientProfileId || session.metadata?.profileId || null;
   const discordId = session.metadata?.discordId || null;
-  let slug: string | null = null;
+  let slug: string | null = session.metadata?.giftToSlug || null;
 
-  if (profileId) {
+  if (recipientId) {
     try {
       const admin = createAdminClient();
       const { data } = await admin
         .from("profiles")
         .select("slug")
-        .eq("id", profileId)
+        .eq("id", recipientId)
         .maybeSingle();
-      slug = (data as { slug?: string } | null)?.slug ?? null;
+      slug = (data as { slug?: string } | null)?.slug ?? slug;
     } catch {
-      // ignore lookup failures
+      // ignore
     }
   }
 
   await notifyDiscordSubscription({
-    profileId,
+    profileId: recipientId,
     discordId,
     slug,
     email: session.customer_details?.email || session.customer_email || null,
     customerId:
       typeof session.customer === "string" ? session.customer : session.customer?.id,
   });
+}
+
+async function fulfillLifetimeCheckout(session: Stripe.Checkout.Session) {
+  if (session.payment_status !== "paid" && session.status !== "complete") {
+    return;
+  }
+
+  const recipientId = session.metadata?.recipientProfileId;
+  const buyerId = session.metadata?.buyerProfileId;
+  const kind = session.metadata?.kind || "self";
+  if (!recipientId) return;
+
+  const customerId =
+    typeof session.customer === "string" ? session.customer : session.customer?.id;
+
+  await grantVoidLifetime({
+    profileId: recipientId,
+    customerId: kind === "self" ? customerId : undefined,
+    stripeSessionId: session.id,
+  });
+
+  if (kind === "gift" && buyerId) {
+    try {
+      const admin = createAdminClient();
+      await admin.from("void_gifts").upsert(
+        {
+          buyer_id: buyerId,
+          recipient_id: recipientId,
+          stripe_session_id: session.id,
+          amount_cents: BLACK_PRICE_CENTS,
+        },
+        { onConflict: "stripe_session_id" },
+      );
+    } catch (err) {
+      console.error("void_gifts insert failed (run supabase/void_gifts.sql?)", err);
+    }
+  }
+
+  await notifyVoidPurchase(session);
 }
 
 export async function POST(req: Request) {
@@ -79,7 +120,10 @@ export async function POST(req: Request) {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
-        if (session.mode === "subscription" && session.subscription) {
+        if (session.mode === "payment") {
+          await fulfillLifetimeCheckout(session);
+        } else if (session.mode === "subscription" && session.subscription) {
+          // Legacy monthly checkouts still sync
           const subId =
             typeof session.subscription === "string"
               ? session.subscription
@@ -99,7 +143,7 @@ export async function POST(req: Request) {
             };
           }
           await syncSubscription(sub);
-          await notifyNewVoidCheckout(session);
+          await notifyVoidPurchase(session);
         }
         break;
       }

@@ -94,12 +94,14 @@ export function MiscEditor({
   initial,
   isBlack = false,
   avatarUrl,
+  avatarDecorationUrl,
   uid,
   discordUsername,
 }: {
   initial: ProfileTemplate;
   isBlack?: boolean;
   avatarUrl?: string | null;
+  avatarDecorationUrl?: string | null;
   uid: number;
   discordUsername: string;
 }) {
@@ -328,8 +330,23 @@ export function MiscEditor({
           <SoftSelect value={config.page.revealStyle} onChange={(revealStyle) => set((c) => ({ ...c, page: { ...c.page, revealStyle: revealStyle as ProfileTemplate["page"]["revealStyle"] } }))} onBlackLock={blackLock} options={markBlack([{ value: "fade", label: "Fade" }, { value: "blur", label: "Blur" }, { value: "zoom", label: "Zoom" }, { value: "glitch", label: "Glitch" }], ["fade"], isBlack)} />
         </Field>
         <Field label="Reveal text">
-          <input className="soft-input" value={config.page.revealText} onChange={(e) => set((c) => ({ ...c, page: { ...c.page, revealText: e.target.value } }))} />
+          <input className="soft-input" value={config.page.revealText} onChange={(e) => set((c) => ({ ...c, page: { ...c.page, revealText: e.target.value } }))} placeholder="Click to enter" />
         </Field>
+        <Field label="Reveal hint">
+          <input className="soft-input" value={config.page.revealHint} onChange={(e) => set((c) => ({ ...c, page: { ...c.page, revealHint: e.target.value } }))} placeholder="Optional subtitle" />
+        </Field>
+        <Field label="Reveal blur" hint={`${config.page.revealBlur}px`}>
+          <Slider min={0} max={40} value={config.page.revealBlur} onChange={(revealBlur) => set((c) => ({ ...c, page: { ...c.page, revealBlur } }))} />
+        </Field>
+        <Field label="Reveal use theme colors">
+          <SoftOnOff value={config.page.revealUseTheme} onChange={(revealUseTheme) => set((c) => ({ ...c, page: { ...c.page, revealUseTheme } }))} />
+        </Field>
+        {!config.page.revealUseTheme && (
+          <>
+            <ColorField label="Reveal text color" value={config.page.revealTextColor} onChange={(revealTextColor) => set((c) => ({ ...c, page: { ...c.page, revealTextColor } }))} />
+            <ColorField label="Reveal background" value={config.page.revealBgColor} onChange={(revealBgColor) => set((c) => ({ ...c, page: { ...c.page, revealBgColor } }))} />
+          </>
+        )}
         <Field label="Avatar animation" black={!isBlack}>
           <SoftSelect value={config.appearance.avatarDecoration} onChange={(avatarDecoration) => set((c) => ({ ...c, appearance: { ...c.appearance, avatarDecoration: avatarDecoration as ProfileTemplate["appearance"]["avatarDecoration"] } }))} onBlackLock={blackLock} options={markBlack([{ value: "none", label: "None" }, { value: "glow", label: "Glow float" }, { value: "pulse", label: "Pulse" }, { value: "ring", label: "Ring sway" }, { value: "spin-ring", label: "Spin ring" }, { value: "hex", label: "Hex" }, { value: "square-glow", label: "Square glow" }], ["none", "glow", "pulse", "ring", "square-glow"], isBlack)} />
         </Field>
@@ -711,6 +728,19 @@ export function MiscEditor({
         <Field label="Show cover">
           <SoftOnOff value={config.audio.showCover} onChange={(showCover) => set((c) => ({ ...c, audio: { ...c.audio, showCover } }))} />
         </Field>
+        <Field
+          label="Player size"
+          hint={`${config.audio.playerSize}px · square cover`}
+        >
+          <Slider
+            min={72}
+            max={168}
+            value={config.audio.playerSize}
+            onChange={(playerSize) =>
+              set((c) => ({ ...c, audio: { ...c.audio, playerSize } }))
+            }
+          />
+        </Field>
         <Field label="Playback mode">
           <SoftSelect value={config.audio.playbackMode} onChange={(playbackMode) => set((c) => ({ ...c, audio: { ...c.audio, playbackMode: playbackMode as ProfileTemplate["audio"]["playbackMode"] } }))} options={[{ value: "loop", label: "Loop" }, { value: "once", label: "Once" }, { value: "shuffle", label: "Shuffle" }]} />
         </Field>
@@ -742,6 +772,7 @@ export function MiscEditor({
       <StyleLivePreview
         config={config}
         avatarUrl={avatarUrl}
+        avatarDecorationUrl={avatarDecorationUrl}
         uid={uid}
         discordUsername={discordUsername}
         dirty={dirty}

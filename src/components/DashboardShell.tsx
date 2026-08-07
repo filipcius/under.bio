@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
+import { DashboardAvatar } from "@/components/DashboardUserContext";
 
 export function DashboardShell({
   title,
@@ -23,11 +24,10 @@ export function DashboardShell({
 
   const header = (
     <div className="mb-6 flex flex-wrap items-center gap-4">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={avatarUrl || "/avatar-fallback.svg"}
-        alt=""
-        className="h-16 w-16 rounded-full object-cover ring-2 ring-white/10"
+      <DashboardAvatar
+        size={64}
+        avatarUrl={avatarUrl}
+        ringClassName="ring-2 ring-white/10"
       />
       <div className="flex flex-1 flex-wrap items-center gap-3">
         <h1 className="section-title text-3xl sm:text-4xl">{title}</h1>

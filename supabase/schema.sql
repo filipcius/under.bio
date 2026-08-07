@@ -11,6 +11,7 @@ create table if not exists public.profiles (
   avatar_hash text,
   avatar_url text,
   banner_url text,
+  avatar_decoration_asset text,
   accent_color integer,
   email text,
   discriminator text,

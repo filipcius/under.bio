@@ -133,6 +133,7 @@ export default async function AdminUserPage({
             configJson={JSON.stringify(page?.config ?? {}, null, 2)}
             periodEnd={profile.plan_period_end}
             planStatus={profile.plan_status}
+            canPublishTemplates={Boolean(profile.can_publish_templates)}
           />
         </div>
       </div>

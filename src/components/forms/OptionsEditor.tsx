@@ -105,6 +105,12 @@ export function OptionsEditor({ initial }: { initial: ProfileTemplate }) {
         onChange={(v) => set("showStatusDot", v)}
       />
       <ToggleRow
+        title="Discord avatar decoration"
+        description="Show your Discord avatar decoration on the public profile. In the dashboard it always appears. Syncs when you log in."
+        checked={options.showDiscordAvatarDecoration}
+        onChange={(v) => set("showDiscordAvatarDecoration", v)}
+      />
+      <ToggleRow
         title="Bio text"
         description="Show your description block."
         checked={options.showBio}
@@ -124,7 +130,7 @@ export function OptionsEditor({ initial }: { initial: ProfileTemplate }) {
       />
       <ToggleRow
         title="Reveal screen"
-        description="Require a click before showing your page."
+        description="Click-to-enter overlay. Always shown when music autoplay is on (browser rule). Style it under Style."
         checked={options.showRevealScreen}
         onChange={(v) => set("showRevealScreen", v)}
       />

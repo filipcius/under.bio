@@ -1,5 +1,9 @@
 import Stripe from "stripe";
-import { BLACK_NAME, BLACK_PRICE_CENTS, BLACK_TAGLINE } from "@/lib/plan";
+import {
+  BLACK_NAME,
+  BLACK_PRICE_CENTS,
+  BLACK_TAGLINE,
+} from "@/lib/plan";
 
 let stripe: Stripe | null = null;
 
@@ -18,7 +22,8 @@ export function getSiteUrl() {
   );
 }
 
-export function blackLineItem(): Stripe.Checkout.SessionCreateParams.LineItem {
+/** One-time lifetime VOID line item (not a recurring subscription). */
+export function blackLifetimeLineItem(): Stripe.Checkout.SessionCreateParams.LineItem {
   const priceId = process.env.STRIPE_PRICE_ID;
   if (priceId) {
     return { price: priceId, quantity: 1 };
@@ -28,10 +33,9 @@ export function blackLineItem(): Stripe.Checkout.SessionCreateParams.LineItem {
     price_data: {
       currency: "usd",
       unit_amount: BLACK_PRICE_CENTS,
-      recurring: { interval: "month" },
       product_data: {
-        name: `under ${BLACK_NAME}`,
-        description: BLACK_TAGLINE,
+        name: `under ${BLACK_NAME} Lifetime`,
+        description: `${BLACK_TAGLINE} One-time purchase · forever.`,
       },
     },
   };

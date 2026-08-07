@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { DISCORD_INVITE_URL } from "@/lib/site";
 
 export const metadata = { title: "Privacy · under.bio" };
 
@@ -111,8 +112,16 @@ export default function PrivacyPage() {
           <section>
             <h2 className="section-title text-xl text-white">10. Changes & contact</h2>
             <p className="mt-2">
-              We may update this Policy and will revise the date above. Contact us through the
-              under.bio Discord community for privacy questions.
+              We may update this Policy and will revise the date above. Contact us through the{" "}
+              <a
+                href={DISCORD_INVITE_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[#5865F2] hover:underline"
+              >
+                under.bio Discord
+              </a>{" "}
+              for privacy questions.
             </p>
           </section>
         </div>

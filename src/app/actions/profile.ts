@@ -283,11 +283,64 @@ export async function resetProfileConfig(): Promise<ActionResult> {
 }
 
 export async function syncDiscord(): Promise<ActionResult> {
-  // Soft sync: session JWT refresh on next login updates Discord fields.
-  // Immediate sync requires re-auth; guide user to re-login.
+  const session = await requireSession();
+  const {
+    decorationAssetFromUser,
+    enrichDiscordUser,
+    fetchGuildMember,
+    mapDiscordProfile,
+  } = await import("@/lib/discord");
+
+  const member = await fetchGuildMember(session.user.discordId);
+  const guildUser = member?.user;
+  if (!guildUser) {
+    return { ok: false, error: "Could not reach Discord. Are you still in the server?" };
+  }
+
+  const user = await enrichDiscordUser(guildUser);
+  const mapped = mapDiscordProfile(user);
+  const admin = createAdminClient();
+
+  const payload = {
+    username: mapped.username,
+    global_name: mapped.global_name,
+    avatar_hash: mapped.avatar_hash,
+    avatar_url: mapped.avatar_url,
+    banner_url: mapped.banner_url,
+    avatar_decoration_asset: mapped.avatar_decoration_asset,
+    accent_color: mapped.accent_color,
+    verified: mapped.verified,
+    premium_type: mapped.premium_type,
+    public_flags: mapped.public_flags,
+    discord_raw: mapped.discord_raw,
+  };
+
+  let { error } = await admin
+    .from("profiles")
+    .update(payload)
+    .eq("id", session.user.profileId);
+
+  if (error) {
+    const { avatar_decoration_asset: _drop, ...rest } = payload;
+    ({ error } = await admin
+      .from("profiles")
+      .update(rest)
+      .eq("id", session.user.profileId));
+  }
+
+  if (error) return { ok: false, error: "Discord sync failed." };
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/miscellaneous");
+  revalidatePath("/dashboard/account");
+  revalidatePath(`/${session.user.slug}`);
+
+  const hasDeco = Boolean(decorationAssetFromUser(user));
   return {
     ok: true,
-    message: "Discord stats refresh on each login. Sign out and sign in to force sync.",
+    message: hasDeco
+      ? "Discord synced — avatar decoration loaded."
+      : "Discord synced. No avatar decoration on your Discord profile.",
   };
 }
 

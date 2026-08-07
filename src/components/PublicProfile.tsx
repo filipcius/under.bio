@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import type { ProfileTemplate } from "@/lib/profile-template";
 import { hexToRgba } from "@/lib/utils";
 import { Icon } from "@/components/Icon";
-import { TrackPlayer } from "@/components/TrackPlayer";
+import { TrackPlayer, type TrackPlayerHandle } from "@/components/TrackPlayer";
 import { TiltPanel } from "@/components/TiltPanel";
 import { buildPanelChrome } from "@/lib/panel-chrome";
 import { DiscordShowcase } from "@/components/DiscordShowcase";
+import { DiscordAvatar } from "@/components/DiscordAvatar";
 import { AnimatedName } from "@/components/AnimatedName";
 import { OwnerBadge, VerifiedBadge } from "@/components/VerifiedBadge";
 import { CustomCursor } from "@/components/CustomCursor";
@@ -83,6 +84,7 @@ function socialRadius(shape: ProfileTemplate["appearance"]["socialShape"]) {
 export function PublicProfile({
   config,
   avatarUrl,
+  avatarDecorationUrl,
   uid,
   totalViews,
   rank,
@@ -95,6 +97,8 @@ export function PublicProfile({
 }: {
   config: ProfileTemplate;
   avatarUrl?: string | null;
+  /** Discord Nitro / shop avatar decoration CDN URL */
+  avatarDecorationUrl?: string | null;
   uid: number;
   totalViews: number;
   rank: number | null;
@@ -106,10 +110,22 @@ export function PublicProfile({
   /** Compact editor preview — no page lock / custom cursor / reveal gate */
   preview?: boolean;
 }) {
-  const [revealed, setRevealed] = useState(
-    preview ? true : !config.options.showRevealScreen,
-  );
+  const showDiscordDecoration =
+    config.options.showDiscordAvatarDecoration && Boolean(avatarDecorationUrl);
+  const decoUrl = showDiscordDecoration ? avatarDecorationUrl : null;
+  const track = config.tracks[0];
+  const needsAudioGate =
+    !preview &&
+    config.audio.autoPlay &&
+    config.options.showMusic &&
+    config.audio.trackPlayer !== "none" &&
+    Boolean(track?.url);
+  const wantsReveal =
+    !preview && (config.options.showRevealScreen || needsAudioGate);
+  const [showGate, setShowGate] = useState(wantsReveal);
+  const trackPlayerRef = useRef<TrackPlayerHandle>(null);
   const [spot, setSpot] = useState({ x: 50, y: 50 });
+  const revealStyle = config.page.revealStyle;
   const primary = config.appearance.primaryText;
   const secondary = config.appearance.secondaryText;
   const theme = config.appearance.themeColor;
@@ -209,7 +225,6 @@ export function PublicProfile({
         ? "right"
         : "left";
 
-  const track = config.tracks[0];
   const boxWidth =
     config.layout.style === "wide"
       ? Math.min(900, config.box.width + 80)
@@ -304,39 +319,97 @@ export function PublicProfile({
       </div>
     ) : null;
 
-  if (!revealed) {
-    return (
-      <>
-        <CustomCursor
-          mode={a.cursor}
-          customUrl={a.customCursorUrl}
-          color={theme}
-          size={a.cursorSize}
-          trail={a.cursorTrail}
-          trailLength={a.cursorTrailLength}
-        />
-        <button
-          type="button"
-          data-cursor-hover
-          onClick={() => setRevealed(true)}
-          className="flex h-dvh w-full items-center justify-center overflow-hidden"
-          style={{
-            background: config.background.color,
-            cursor: customCursorOn ? "none" : "auto",
-            backdropFilter: `blur(${config.page.revealBlur}px)`,
-          }}
-        >
-          <span className="reveal-pulse section-title text-2xl text-white/90">
-            {config.page.revealText}
-          </span>
-        </button>
-      </>
-    );
-  }
+  const gateExit =
+    revealStyle === "zoom"
+      ? { opacity: 0, scale: 1.14 }
+      : revealStyle === "blur"
+        ? { opacity: 0, scale: 1.03 }
+        : revealStyle === "glitch"
+          ? { opacity: 0, x: 14, scale: 1.02 }
+          : { opacity: 0, y: -16, scale: 1.02 };
+
+  const contentEnter =
+    revealStyle === "zoom"
+      ? { initial: { opacity: 0, scale: 1.1 }, animate: { opacity: 1, scale: 1 } }
+      : revealStyle === "blur"
+        ? { initial: { opacity: 0, scale: 1.02 }, animate: { opacity: 1, scale: 1 } }
+        : revealStyle === "glitch"
+          ? { initial: { opacity: 0, x: -18 }, animate: { opacity: 1, x: 0 } }
+          : { initial: { opacity: 0, y: 22 }, animate: { opacity: 1, y: 0 } };
 
   return (
-    <div
+    <>
+      <AnimatePresence>
+        {showGate && (
+          <motion.button
+            key="reveal-gate"
+            type="button"
+            data-cursor-hover
+            initial={{ opacity: 1, scale: 1, filter: "blur(0px)", x: 0, y: 0 }}
+            exit={gateExit}
+            transition={
+              revealStyle === "glitch"
+                ? { duration: 0.55, ease: [0.22, 1, 0.36, 1] }
+                : { duration: 0.7, ease: [0.22, 1, 0.36, 1] }
+            }
+            onClick={() => {
+              if (needsAudioGate) {
+                void trackPlayerRef.current?.playFromGesture();
+              }
+              setShowGate(false);
+            }}
+            className="fixed inset-0 z-[200] flex h-dvh w-full flex-col items-center justify-center gap-3 overflow-hidden px-6"
+            style={{
+              background: config.page.revealUseTheme
+                ? config.background.color
+                : config.page.revealBgColor,
+              cursor: customCursorOn ? "none" : "auto",
+              backdropFilter: `blur(${config.page.revealBlur}px)`,
+            }}
+          >
+            <motion.span
+              className={`section-title text-2xl sm:text-4xl ${fontClass(a.font)}`}
+              style={{
+                color: config.page.revealUseTheme
+                  ? primary
+                  : config.page.revealTextColor,
+              }}
+              initial={{ opacity: 0.55, scale: 0.94, letterSpacing: "0.02em" }}
+              animate={{
+                opacity: [0.55, 1, 0.55],
+                scale: [0.94, 1, 0.94],
+                letterSpacing: ["0.02em", "0.08em", "0.02em"],
+              }}
+              transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+            >
+              {config.page.revealText || "Click to enter"}
+            </motion.span>
+            {config.page.revealHint ? (
+              <motion.span
+                className="text-xs uppercase tracking-[0.22em] sm:text-sm"
+                style={{
+                  color: config.page.revealUseTheme
+                    ? secondary
+                    : config.page.revealTextColor,
+                  opacity: 0.55,
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.55 }}
+                transition={{ delay: 0.25 }}
+              >
+                {config.page.revealHint}
+              </motion.span>
+            ) : null}
+          </motion.button>
+        )}
+      </AnimatePresence>
+    <motion.div
       className={`relative w-full overflow-hidden ${preview ? "h-full" : "h-dvh"} ${fontClass(a.font)}`}
+      initial={wantsReveal ? contentEnter.initial : false}
+      animate={
+        !wantsReveal || !showGate ? contentEnter.animate : contentEnter.initial
+      }
+      transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
       style={{
         backgroundColor: config.background.color,
         cursor: customCursorOn ? "none" : "auto",
@@ -630,24 +703,22 @@ export function PublicProfile({
                       }}
                     />
                   )}
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={avatarUrl || "/avatar-fallback.svg"}
-                    alt=""
-                    className="relative object-cover ring-4 ring-[#0e0e0e]"
-                    style={{
-                      width: a.avatarSize,
-                      height: a.avatarSize,
-                      borderRadius:
-                        a.avatarDecoration === "hex" || a.avatarDecoration === "square-glow"
-                          ? "18%"
-                          : `${a.avatarRadius}%`,
-                      border:
-                        a.avatarBorderWidth > 0
-                          ? `${a.avatarBorderWidth}px solid ${a.avatarBorderColor}`
-                          : undefined,
-                      boxShadow: `0 8px ${a.avatarShadow}px ${hexToRgba("#000000", 55)}`,
-                    }}
+                  <DiscordAvatar
+                    avatarUrl={avatarUrl}
+                    decorationUrl={decoUrl}
+                    size={a.avatarSize}
+                    ringClassName="ring-4 ring-[#0e0e0e]"
+                    borderRadius={
+                      a.avatarDecoration === "hex" || a.avatarDecoration === "square-glow"
+                        ? "18%"
+                        : `${a.avatarRadius}%`
+                    }
+                    border={
+                      a.avatarBorderWidth > 0
+                        ? `${a.avatarBorderWidth}px solid ${a.avatarBorderColor}`
+                        : undefined
+                    }
+                    boxShadow={`0 8px ${a.avatarShadow}px ${hexToRgba("#000000", 55)}`}
                   />
                 </motion.div>
               </div>
@@ -779,14 +850,13 @@ export function PublicProfile({
               } ${config.layout.presenceStyle === "pill" ? "!rounded-full" : ""}`}
             >
               <div className="flex min-w-0 items-center gap-2.5">
-                <div className="relative">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={avatarUrl || "/avatar-fallback.svg"}
-                    alt=""
-                    className="h-9 w-9 rounded-full object-cover"
-                  />
-                  {config.options.showStatusDot && (
+                <DiscordAvatar
+                  avatarUrl={avatarUrl}
+                  decorationUrl={decoUrl}
+                  size={36}
+                  borderRadius="50%"
+                >
+                  {config.options.showStatusDot ? (
                     <span
                       className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#141414]"
                       style={{
@@ -794,8 +864,8 @@ export function PublicProfile({
                         boxShadow: `0 0 10px ${a.statusDotColor}`,
                       }}
                     />
-                  )}
-                </div>
+                  ) : null}
+                </DiscordAvatar>
                 <div className="min-w-0">
                   <p className="flex items-center gap-1.5 truncate text-sm font-semibold">
                     {cleanCopy(config.meta.displayName)}
@@ -848,13 +918,17 @@ export function PublicProfile({
             track?.url && (
               <TiltPanel enabled={tiltEnabled} strength={tiltStrength * 0.75}>
                 <TrackPlayer
+                  ref={trackPlayerRef}
                   title={track.title}
                   url={track.url}
-                  cover={config.audio.showCover ? track.cover : undefined}
+                  cover={config.audio.showCover ? track.cover || "" : undefined}
                   loop={config.audio.playbackMode === "loop"}
-                  autoPlay={preview ? false : config.audio.autoPlay}
+                  autoPlay={
+                    preview ? false : config.audio.autoPlay && !wantsReveal
+                  }
                   defaultVolume={preview ? 0 : config.audio.defaultVolume}
                   visualizer={!preview && config.audio.visualizer}
+                  playerSize={config.audio.playerSize}
                   primary={primary}
                   secondary={secondary}
                   border={border}
@@ -866,6 +940,7 @@ export function PublicProfile({
             )}
         </motion.div>
       </FitViewport>
-    </div>
+    </motion.div>
+    </>
   );
 }

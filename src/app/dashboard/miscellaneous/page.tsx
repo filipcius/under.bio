@@ -4,6 +4,8 @@ import { DashboardShell } from "@/components/DashboardShell";
 import { MiscEditor } from "@/components/forms/MiscEditor";
 import { getPlanByProfileId } from "@/lib/subscription";
 import { ensureFreePlanCompliance } from "@/app/actions/profile";
+import { profileDecorationAsset } from "@/lib/discord";
+import { discordAvatarDecorationUrl } from "@/lib/utils";
 import { redirect } from "next/navigation";
 
 export default async function MiscellaneousPage() {
@@ -28,6 +30,7 @@ export default async function MiscellaneousPage() {
         initial={page.config}
         isBlack={plan.isBlack}
         avatarUrl={profile.avatar_url}
+        avatarDecorationUrl={discordAvatarDecorationUrl(profileDecorationAsset(profile))}
         uid={profile.uid}
         discordUsername={profile.global_name || profile.username || profile.slug}
       />

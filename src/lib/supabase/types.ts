@@ -8,6 +8,8 @@ export type ProfileRow = {
   avatar_hash: string | null;
   avatar_url: string | null;
   banner_url: string | null;
+  /** Discord avatar decoration preset asset hash (from avatar_decoration_data.asset) */
+  avatar_decoration_asset?: string | null;
   accent_color: number | null;
   email: string | null;
   discriminator: string | null;
@@ -23,7 +25,49 @@ export type ProfileRow = {
   plan_period_end?: string | null;
   stripe_customer_id?: string | null;
   stripe_subscription_id?: string | null;
+  can_publish_templates?: boolean | null;
+  invite_code?: string | null;
+  referred_by?: string | null;
+  referral_rewards_claimed?: number | null;
   discord_raw: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ThemeTemplateCategory =
+  | "dark"
+  | "light"
+  | "minimal"
+  | "neon"
+  | "aesthetic"
+  | "other";
+
+export type ThemeTemplateStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "hidden";
+
+export type ThemeTemplatePreview = {
+  primary: string;
+  secondary: string;
+  bg: string;
+  accent: string;
+  font: string;
+  box: string;
+};
+
+export type ThemeTemplateRow = {
+  id: string;
+  author_id: string;
+  name: string;
+  description: string;
+  category: ThemeTemplateCategory;
+  config: Record<string, unknown>;
+  preview: ThemeTemplatePreview;
+  status: ThemeTemplateStatus;
+  uses_count: number;
+  featured: boolean;
   created_at: string;
   updated_at: string;
 };

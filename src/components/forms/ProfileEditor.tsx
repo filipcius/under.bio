@@ -43,7 +43,7 @@ export function ProfileEditor({
   return (
     <div className="space-y-6">
       <p className="help">
-        Configure how your public page looks. Your Discord avatar syncs on login. You can only own{" "}
+        Configure how your public page looks. Your Discord avatar and decoration sync on login. You can only own{" "}
         <strong className="text-white/80">one</strong> page - change the URL ending below if you
         want a new link.
       </p>

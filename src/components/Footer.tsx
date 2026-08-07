@@ -13,6 +13,9 @@ export function Footer() {
           <Link href="/black" className="hover:text-white/70">
             VOID
           </Link>
+          <Link href="/templates" className="hover:text-white/70">
+            Templates
+          </Link>
           <Link href="/terms" className="hover:text-white/70">
             Terms
           </Link>

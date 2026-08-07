@@ -8,7 +8,14 @@ export const BLACK_PRICE_CENTS = 499;
 /** Paid tier display name (DB plan id stays `black`) */
 export const BLACK_NAME = "VOID";
 export const BLACK_TAGLINE = "Full control. Zero limits.";
+export const BLACK_BILLING_LABEL = "lifetime";
+export const BLACK_PRICE_LINE = `$${BLACK_PRICE_USD} lifetime`;
 
+/**
+ * VOID access check.
+ * Lifetime purchases use status=active and plan_period_end=null.
+ * Timed grants (invites / admin) set an expiry on plan_period_end.
+ */
 export function hasBlack(
   plan?: string | null,
   status?: string | null,
@@ -18,9 +25,17 @@ export function hasBlack(
   if (!(status === "active" || status === "trialing" || status === "past_due")) {
     return false;
   }
-  // Comp / billing window ended
   if (periodEnd && new Date(periodEnd).getTime() < Date.now()) return false;
   return true;
+}
+
+/** True when user already has permanent VOID (no end date). */
+export function hasLifetimeVoid(
+  plan?: string | null,
+  status?: string | null,
+  periodEnd?: string | null,
+) {
+  return hasBlack(plan, status, periodEnd) && !periodEnd;
 }
 
 /** Features locked on free — shown with diamond in Style editor */
@@ -108,6 +123,7 @@ export function enforceFreePlanConfig(config: ProfileTemplate): ProfileTemplate 
         ? base.page.enterAnimation
         : "slide-up",
       overlay: allowedOverlay.has(base.page.overlay) ? base.page.overlay : "none",
+      revealStyle: "fade",
       particles: "none",
       particleDensity: 40,
     },

@@ -163,6 +163,8 @@ export function HomeLanding() {
           <span>1 page per account</span>
           <span className="text-white/15">/</span>
           <span>VOID style unlock</span>
+          <span className="text-white/15">/</span>
+          <span>Free VOID via invites</span>
         </motion.div>
       </section>
 

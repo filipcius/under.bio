@@ -2,14 +2,16 @@
 
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { BlackCheckoutButton } from "@/components/BlackCheckoutButton";
+import { BlackCheckoutButton, GiftVoidButton } from "@/components/BlackCheckoutButton";
 import { BlackDiamond } from "@/components/BlackDiamond";
 import {
   BLACK_FEATURES,
   BLACK_NAME,
+  BLACK_PRICE_LINE,
   BLACK_PRICE_USD,
   BLACK_TAGLINE,
 } from "@/lib/plan";
+import { DISCORD_INVITE_URL } from "@/lib/site";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -26,13 +28,16 @@ const freePerks = [
 export function VoidShop({
   signedIn,
   isVoid,
+  isLifetime,
   canceled,
 }: {
   signedIn: boolean;
   isVoid: boolean;
+  isLifetime?: boolean;
   canceled?: boolean;
 }) {
   const reduce = useReducedMotion();
+  const ownedForever = Boolean(isLifetime);
 
   const fade = (i: number) =>
     reduce
@@ -76,28 +81,49 @@ export function VoidShop({
         </motion.p>
         <motion.p {...fade(3)} className="mt-6 section-title text-3xl sm:text-5xl">
           ${BLACK_PRICE_USD}
-          <span className="text-base font-normal text-white/40 sm:text-lg"> / month</span>
+          <span className="text-base font-normal text-white/40 sm:text-lg"> lifetime</span>
         </motion.p>
         <motion.p {...fade(4)} className="mt-2 text-sm text-white/40">
-          Cancel anytime · Stripe secure checkout
+          One-time payment · yours forever · Stripe secure
         </motion.p>
 
         <motion.div {...fade(5)} className="mx-auto mt-8 max-w-sm">
-          {isVoid ? (
-            <Link href="/dashboard/account" className="btn btn-primary w-full text-base">
-              <BlackDiamond /> You have {BLACK_NAME} - manage
-            </Link>
+          {ownedForever ? (
+            <div className="space-y-3">
+              <Link href="/dashboard/account" className="btn btn-primary w-full text-base">
+                <BlackDiamond /> You have {BLACK_NAME} — manage
+              </Link>
+              <GiftVoidButton signedIn={signedIn} />
+            </div>
           ) : (
             <BlackCheckoutButton
               signedIn={signedIn}
               label={
-                signedIn
-                  ? `Unlock ${BLACK_NAME} - $${BLACK_PRICE_USD}/mo`
-                  : `Sign in & unlock ${BLACK_NAME}`
+                isVoid
+                  ? `Upgrade to lifetime · ${BLACK_PRICE_LINE}`
+                  : `Get ${BLACK_NAME} · ${BLACK_PRICE_LINE}`
               }
             />
           )}
         </motion.div>
+        <motion.p {...fade(5.5)} className="mx-auto mt-4 max-w-md text-sm text-white/40">
+          Or earn free {BLACK_NAME}: invite 10 friends who sign up → 14 days unlocked.{" "}
+          {signedIn ? (
+            <Link
+              href="/dashboard/invites"
+              className="text-sky-200/80 underline-offset-2 hover:text-sky-100 hover:underline"
+            >
+              Open invites
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="text-sky-200/80 underline-offset-2 hover:text-sky-100 hover:underline"
+            >
+              Sign in to start
+            </Link>
+          )}
+        </motion.p>
       </div>
 
       {/* Equal-height plan cards — buttons pinned to bottom */}
@@ -129,7 +155,7 @@ export function VoidShop({
             <BlackDiamond /> {BLACK_NAME}
           </h2>
           <p className="mt-1 text-sm text-white/55">
-            ${BLACK_PRICE_USD}/mo · everything unlocked
+            {BLACK_PRICE_LINE} · everything unlocked
           </p>
           <ul className="mt-5 flex-1 space-y-3 text-sm text-white/80">
             {BLACK_FEATURES.map((f) => (
@@ -143,12 +169,22 @@ export function VoidShop({
             ))}
           </ul>
           <div className="mt-6">
-            {isVoid ? (
-              <Link href="/dashboard/miscellaneous" className="btn btn-primary w-full">
-                Open Style lab
-              </Link>
+            {ownedForever ? (
+              <div className="space-y-2">
+                <Link href="/dashboard/miscellaneous" className="btn btn-primary w-full">
+                  Open Style lab
+                </Link>
+                <GiftVoidButton signedIn={signedIn} className="btn btn-ghost w-full" />
+              </div>
             ) : (
-              <BlackCheckoutButton signedIn={signedIn} label={`Get ${BLACK_NAME} now`} />
+              <BlackCheckoutButton
+                signedIn={signedIn}
+                label={
+                  isVoid
+                    ? `Upgrade to lifetime · ${BLACK_PRICE_LINE}`
+                    : `Get ${BLACK_NAME} now`
+                }
+              />
             )}
           </div>
         </div>
@@ -198,16 +234,25 @@ export function VoidShop({
       <motion.div {...fade(8)} className="mx-auto mt-12 max-w-xl text-center sm:mt-14">
         <h2 className="section-title text-2xl sm:text-3xl">Ready in under a minute</h2>
         <p className="mt-3 text-sm text-white/50">
-          Discord login → unlock {BLACK_NAME} → Style lab opens. Cancel anytime from Account. No
-          fake trials.
+          Discord login → unlock {BLACK_NAME} once → Style lab opens forever. Or gift it to a
+          friend. Timed invite rewards still available from Invites.
         </p>
-        <div className="mx-auto mt-6 max-w-sm">
-          {!isVoid && (
+        <div className="mx-auto mt-6 flex max-w-sm flex-col gap-2">
+          {!ownedForever && (
             <BlackCheckoutButton
               signedIn={signedIn}
-              label={`Unlock ${BLACK_NAME} - $${BLACK_PRICE_USD}/mo`}
+              label={`Get ${BLACK_NAME} · ${BLACK_PRICE_LINE}`}
             />
           )}
+          {ownedForever && <GiftVoidButton signedIn={signedIn} />}
+          <a
+            href={DISCORD_INVITE_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="btn btn-ghost w-full justify-center text-sm"
+          >
+            Join Discord
+          </a>
         </div>
       </motion.div>
     </div>

@@ -1,10 +1,15 @@
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { DISCORD_INVITE_URL } from "@/lib/site";
 
 const faqs = [
   {
     q: "Who can sign in?",
-    a: "Anyone in the required Discord server, using Discord OAuth.",
+    a: "Anyone in the under.bio Discord server, using Discord OAuth.",
+  },
+  {
+    q: "Where do I join the Discord?",
+    a: DISCORD_INVITE_URL,
   },
   {
     q: "Can I have multiple pages?",
@@ -30,10 +35,29 @@ export default function FaqPage() {
           {faqs.map((item) => (
             <div key={item.q} className="glass-card p-5">
               <h2 className="font-semibold">{item.q}</h2>
-              <p className="help mt-2">{item.a}</p>
+              {item.a.startsWith("http") ? (
+                <a
+                  href={item.a}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-2 inline-block text-sm text-[#5865F2] hover:underline"
+                >
+                  {item.a}
+                </a>
+              ) : (
+                <p className="help mt-2">{item.a}</p>
+              )}
             </div>
           ))}
         </div>
+        <a
+          href={DISCORD_INVITE_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="btn btn-discord mt-8"
+        >
+          Join Discord
+        </a>
       </main>
       <Footer />
     </>

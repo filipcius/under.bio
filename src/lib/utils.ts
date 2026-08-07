@@ -53,6 +53,15 @@ export function discordBannerUrl(
   return `https://cdn.discordapp.com/banners/${discordId}/${bannerHash}.${ext}?size=${size}`;
 }
 
+/** Discord Nitro avatar decoration preset (APNG when animated). */
+export function discordAvatarDecorationUrl(
+  asset: string | null | undefined,
+  size = 240,
+) {
+  if (!asset) return null;
+  return `https://cdn.discordapp.com/avatar-decoration-presets/${asset}.png?size=${size}&passthrough=true`;
+}
+
 export function hexToRgba(hex: string, opacityPercent: number) {
   const clean = hex.replace("#", "");
   const r = parseInt(clean.slice(0, 2), 16);

@@ -11,6 +11,7 @@ const STICKY_TOP = 80; // matches navbar + gap (top-20)
 export function StyleLivePreview({
   config,
   avatarUrl,
+  avatarDecorationUrl,
   uid,
   discordUsername,
   dirty,
@@ -18,6 +19,7 @@ export function StyleLivePreview({
 }: {
   config: ProfileTemplate;
   avatarUrl?: string | null;
+  avatarDecorationUrl?: string | null;
   uid: number;
   discordUsername: string;
   dirty: boolean;
@@ -121,20 +123,24 @@ export function StyleLivePreview({
             </motion.span>
           </AnimatePresence>
         </div>
-        <div className="relative mx-2 mb-2 h-[min(580px,calc(100vh-9rem))] overflow-hidden rounded-xl border border-white/[0.06] bg-[#050505]">
-          <PublicProfile
-            config={deferred}
-            avatarUrl={avatarUrl}
-            uid={uid}
-            totalViews={1284}
-            rank={12}
-            joinedAt={new Date().toISOString()}
-            discordUsername={discordUsername}
-            isOwner={false}
-            discordVerified
-            isBlack={isBlack}
-            preview
-          />
+        <div className="relative mx-2 mb-2 h-[min(580px,calc(100vh-9rem))] overflow-y-auto overflow-x-hidden rounded-xl border border-white/[0.06] bg-[#050505]">
+          {/* Top pad so Discord avatar decorations aren't clipped by the preview frame */}
+          <div className="pt-5">
+            <PublicProfile
+              config={deferred}
+              avatarUrl={avatarUrl}
+              avatarDecorationUrl={avatarDecorationUrl}
+              uid={uid}
+              totalViews={1284}
+              rank={12}
+              joinedAt={new Date().toISOString()}
+              discordUsername={discordUsername}
+              isOwner={false}
+              discordVerified
+              isBlack={isBlack}
+              preview
+            />
+          </div>
         </div>
       </div>
     </aside>

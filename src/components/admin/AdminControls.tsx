@@ -6,13 +6,14 @@ import {
   adminDeleteUser,
   adminResetConfig,
   adminSaveConfig,
+  adminSetCanPublishTemplates,
   adminSetPlan,
   adminSetPublished,
   adminSetViews,
   adminUpdateSlug,
 } from "@/app/actions/admin";
 import { BlackDiamond } from "@/components/BlackDiamond";
-import { SoftSelect } from "@/components/forms/SoftSelect";
+import { SoftOnOff, SoftSelect } from "@/components/forms/SoftSelect";
 
 export function AdminQuickActions({
   profileId,
@@ -85,6 +86,7 @@ export function AdminUserDetailForm({
   configJson,
   periodEnd,
   planStatus,
+  canPublishTemplates = false,
 }: {
   profileId: string;
   slug: string;
@@ -94,11 +96,13 @@ export function AdminUserDetailForm({
   configJson: string;
   periodEnd?: string | null;
   planStatus?: string | null;
+  canPublishTemplates?: boolean;
 }) {
   const [slugVal, setSlug] = useState(slug);
   const [views, setViews] = useState(String(totalViews));
   const [json, setJson] = useState(configJson);
   const [grantDays, setGrantDays] = useState(30);
+  const [earlyTpl, setEarlyTpl] = useState(canPublishTemplates);
   const [msg, setMsg] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const router = useRouter();
@@ -218,6 +222,25 @@ export function AdminUserDetailForm({
               Revoke VOID
             </button>
           )}
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <h3 className="text-xs uppercase tracking-[0.18em] text-white/40">
+          Templates
+        </h3>
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3">
+          <div>
+            <p className="text-sm text-white/80">Early theme publish</p>
+            <p className="help">Skip the 4-day account age requirement.</p>
+          </div>
+          <SoftOnOff
+            value={earlyTpl}
+            onChange={(v) => {
+              setEarlyTpl(v);
+              run(() => adminSetCanPublishTemplates(profileId, v));
+            }}
+          />
         </div>
       </section>
 

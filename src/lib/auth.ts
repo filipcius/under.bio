@@ -1,7 +1,12 @@
 import NextAuth from "next-auth";
 import Discord from "next-auth/providers/discord";
 import { getServerEnv } from "@/lib/env";
-import { fetchDiscordUser, isGuildMember, mapDiscordProfile } from "@/lib/discord";
+import {
+  enrichDiscordUser,
+  fetchDiscordUser,
+  isGuildMember,
+  mapDiscordProfile,
+} from "@/lib/discord";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   DEFAULT_PROFILE_TEMPLATE,
@@ -9,7 +14,9 @@ import {
 } from "@/lib/profile-template";
 import type { ProfileRow } from "@/lib/supabase/types";
 import { hasBlack } from "@/lib/plan";
+import { attributeReferral, INVITE_COOKIE } from "@/lib/referrals";
 import { slugify } from "@/lib/utils";
+import { cookies } from "next/headers";
 
 /** Persist login for 30 days */
 const SESSION_MAX_AGE = 60 * 60 * 24 * 30;
@@ -55,13 +62,52 @@ async function ensureUniqueSlug(base: string, excludeProfileId?: string) {
   return `u${Date.now().toString(36)}`.slice(0, 25);
 }
 
-async function upsertProfileFromDiscord(accessToken: string): Promise<ProfileRow> {
-  const user = await fetchDiscordUser(accessToken);
-  const member = await isGuildMember(user.id);
+async function writeProfileRow(
+  mode: "update" | "insert",
+  payload: Record<string, unknown>,
+  profileId?: string,
+) {
+  const admin = createAdminClient();
+  const withDeco = { ...payload };
+  const withoutDeco = { ...payload };
+  delete withoutDeco.avatar_decoration_asset;
+
+  if (mode === "update" && profileId) {
+    let res = await admin
+      .from("profiles")
+      .update(withDeco)
+      .eq("id", profileId)
+      .select("*")
+      .single();
+    // Column may be missing until avatar_decoration.sql is applied
+    if (res.error) {
+      res = await admin
+        .from("profiles")
+        .update(withoutDeco)
+        .eq("id", profileId)
+        .select("*")
+        .single();
+    }
+    return res;
+  }
+
+  let res = await admin.from("profiles").insert(withDeco).select("*").single();
+  if (res.error) {
+    res = await admin.from("profiles").insert(withoutDeco).select("*").single();
+  }
+  return res;
+}
+
+async function upsertProfileFromDiscord(
+  accessToken: string,
+): Promise<{ profile: ProfileRow; isNew: boolean }> {
+  const rawUser = await fetchDiscordUser(accessToken);
+  const member = await isGuildMember(rawUser.id);
   if (!member) {
     throw new Error("NOT_IN_GUILD");
   }
 
+  const user = await enrichDiscordUser(rawUser);
   const mapped = mapDiscordProfile(user);
   const admin = createAdminClient();
 
@@ -71,57 +117,41 @@ async function upsertProfileFromDiscord(accessToken: string): Promise<ProfileRow
     .eq("discord_id", mapped.discord_id)
     .maybeSingle();
 
+  const shared = {
+    username: mapped.username,
+    global_name: mapped.global_name,
+    avatar_hash: mapped.avatar_hash,
+    avatar_url: mapped.avatar_url,
+    banner_url: mapped.banner_url,
+    avatar_decoration_asset: mapped.avatar_decoration_asset,
+    accent_color: mapped.accent_color,
+    email: mapped.email,
+    discriminator: mapped.discriminator,
+    locale: mapped.locale,
+    verified: mapped.verified,
+    mfa_enabled: mapped.mfa_enabled,
+    premium_type: mapped.premium_type,
+    public_flags: mapped.public_flags,
+    discord_raw: mapped.discord_raw,
+  };
+
   if (existing) {
     const current = existing as ProfileRow;
-    const { data: updated, error } = await admin
-      .from("profiles")
-      .update({
-        username: mapped.username,
-        global_name: mapped.global_name,
-        avatar_hash: mapped.avatar_hash,
-        avatar_url: mapped.avatar_url,
-        banner_url: mapped.banner_url,
-        accent_color: mapped.accent_color,
-        email: mapped.email,
-        discriminator: mapped.discriminator,
-        locale: mapped.locale,
-        verified: mapped.verified,
-        mfa_enabled: mapped.mfa_enabled,
-        premium_type: mapped.premium_type,
-        public_flags: mapped.public_flags,
-        discord_raw: mapped.discord_raw,
-      })
-      .eq("id", current.id)
-      .select("*")
-      .single();
-
+    const { data: updated, error } = await writeProfileRow(
+      "update",
+      shared,
+      current.id,
+    );
     if (error || !updated) throw error ?? new Error("Profile update failed");
-    return updated as ProfileRow;
+    return { profile: updated as ProfileRow, isNew: false };
   }
 
   const slug = await ensureUniqueSlug(mapped.suggested_slug);
-  const { data: created, error } = await admin
-    .from("profiles")
-    .insert({
-      discord_id: mapped.discord_id,
-      username: mapped.username,
-      global_name: mapped.global_name,
-      avatar_hash: mapped.avatar_hash,
-      avatar_url: mapped.avatar_url,
-      banner_url: mapped.banner_url,
-      accent_color: mapped.accent_color,
-      email: mapped.email,
-      discriminator: mapped.discriminator,
-      locale: mapped.locale,
-      verified: mapped.verified,
-      mfa_enabled: mapped.mfa_enabled,
-      premium_type: mapped.premium_type,
-      public_flags: mapped.public_flags,
-      slug,
-      discord_raw: mapped.discord_raw,
-    })
-    .select("*")
-    .single();
+  const { data: created, error } = await writeProfileRow("insert", {
+    ...shared,
+    discord_id: mapped.discord_id,
+    slug,
+  });
 
   if (error || !created) throw error ?? new Error("Profile create failed");
   const profile = created as ProfileRow;
@@ -142,7 +172,27 @@ async function upsertProfileFromDiscord(accessToken: string): Promise<ProfileRow
   });
 
   if (pageError) throw pageError;
-  return profile;
+
+  // Attribute invite only for brand-new profiles (cookie set via /i/[code])
+  try {
+    const jar = await cookies();
+    const code = jar.get(INVITE_COOKIE)?.value;
+    if (code) {
+      await attributeReferral({ inviteeId: profile.id, code });
+      jar.set(INVITE_COOKIE, "", {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: isProd,
+        path: "/",
+        maxAge: 0,
+        ...(isProd ? { domain: ".under.bio" } : {}),
+      });
+    }
+  } catch (err) {
+    console.error("Referral attribution failed", err);
+  }
+
+  return { profile, isNew: true };
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth(() => {
@@ -220,7 +270,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth(() => {
         if (account?.access_token) {
           try {
             getServerEnv();
-            const profile = await upsertProfileFromDiscord(account.access_token);
+            const { profile } = await upsertProfileFromDiscord(account.access_token);
             token.discordId = profile.discord_id;
             token.profileId = profile.id;
             token.slug = profile.slug;

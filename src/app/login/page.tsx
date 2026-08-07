@@ -12,6 +12,8 @@ function loginErrorMessage(error?: string) {
       return "You must be a member of the under.bio Discord server to sign in.";
     case "auth_failed":
       return "Sign-in failed. Try again or contact support.";
+    case "bad_invite":
+      return "That invite link or code is invalid. You can still sign in normally.";
     case "OAuthCallback":
     case "Callback":
     case "OAuthSignin":
@@ -30,7 +32,7 @@ function loginErrorMessage(error?: string) {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; next?: string }>;
+  searchParams: Promise<{ error?: string; next?: string; ref?: string }>;
 }) {
   const params = await searchParams;
   try {
@@ -42,6 +44,7 @@ export default async function LoginPage({
 
   const errorMessage = loginErrorMessage(params.error);
   const next = params.next && params.next.startsWith("/") ? params.next : "/dashboard";
+  const inviteRef = params.ref?.trim().toUpperCase();
 
   return (
     <>
@@ -53,6 +56,13 @@ export default async function LoginPage({
             Discord only. You must be in the required server. We pull your avatar, username, and
             profile stats automatically.
           </p>
+
+          {inviteRef && (
+            <div className="mt-4 rounded-xl border border-sky-300/25 bg-sky-400/10 px-3 py-2 text-sm text-sky-50/90">
+              Invite <span className="font-mono tracking-wider">{inviteRef}</span> applied — new
+              accounts count for your friend&apos;s reward.
+            </div>
+          )}
 
           {errorMessage && (
             <div className="mt-4 rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-2 text-sm text-red-100">

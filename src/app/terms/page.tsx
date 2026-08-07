@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { DISCORD_INVITE_URL } from "@/lib/site";
 
 export const metadata = { title: "Terms · under.bio" };
 
@@ -48,13 +49,12 @@ export default function TermsPage() {
           <section>
             <h2 className="section-title text-xl text-white">4. under VOID (paid plan)</h2>
             <p className="mt-2">
-              Optional paid subscription (&quot;VOID&quot;) unlocks additional styling and module
-              limits for a recurring fee displayed at checkout (currently USD $4.99 / month unless
-              otherwise stated). Payments are processed by Stripe. Subscriptions renew until
-              canceled. You can manage or cancel billing from your Account page (Stripe Customer
-              Portal). Fees already charged are generally non-refundable except where required by
-              law. Feature availability may change; we will not charge for VOID without an active
-              subscription.
+              Optional paid plan (&quot;VOID&quot;) unlocks additional styling and module limits for
+              a one-time lifetime fee displayed at checkout (currently USD $4.99 unless otherwise
+              stated). You may also purchase VOID as a gift for another under.bio account. Payments
+              are processed by Stripe. Lifetime purchases are generally non-refundable except where
+              required by law. Timed complimentary unlocks (e.g. invite rewards) may expire and are
+              separate from lifetime purchases. Feature availability may change over time.
             </p>
           </section>
 
@@ -104,8 +104,16 @@ export default function TermsPage() {
           <section>
             <h2 className="section-title text-xl text-white">10. Contact</h2>
             <p className="mt-2">
-              Questions about these Terms: contact us via the under.bio Discord community listed on
-              the site.
+              Questions about these Terms: contact us via the{" "}
+              <a
+                href={DISCORD_INVITE_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[#5865F2] hover:underline"
+              >
+                under.bio Discord
+              </a>
+              .
             </p>
           </section>
         </div>
